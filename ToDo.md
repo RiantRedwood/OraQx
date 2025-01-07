@@ -4,7 +4,16 @@
   - Produce viable working input / output from within Github Codespace
   - Upload sample data for testing / development
   - Develop Pwsh / Py script for preprocessing / data cleanup
+  - Engage LLMs for in-depth discussion:
+    * 'What are the right questions to ask?'
+    * 'What can I use as proof the script is producing viable results?'
+    * 'Is there a known sample for such testing?'
+    * 
+  -
+  - Test working scripts in Excel
+  - Consider pros / cons of combining all files vs parsing .sql versions only
   - Initialize Azure Utilities where possible
+  - 
   - 
   
   - Search Public Repos for:
