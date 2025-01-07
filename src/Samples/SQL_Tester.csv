@@ -1,0 +1,3267 @@
+table_query
+"""/******************************"
+**  Ticke#:
+**  Name: Digital Med - Team Member Kronos Time
+**  Requested By: Rebecca Arriaga
+**  Description: This query pulls in the time/days worked and taken off from Kronos
+**  Author: Jackson Wilde
+**  Date: 03.21.2023
+
+
+
+
+*******************************
+**  Change History
+*******************************
+**  Version   Date              Author            Description
+**  -------   --------          ------------      ----------------------------------
+**  1         03.21.2023        Jackson Wilde     V1: Created
+**  2         04.11.2023        Jackson Wilde     V2: Updated to use the WFCTOTAL table based on information recieved from Peter Thompson about the Kronos data structure.
+**  3         04.12.2023        Jackson Wilde     V3: Removed unecessary joins and limited query to only pulling in the REG-Regular paycode since this should already account for time off.
+**  4         08.15.2023        Aili Zhou         V4: Changed Days_Worked logic to count days with less than 5 hours worked as half days
+"**  5         10.20.2023        Aili Zhou         V5: Added Paycode 137 to include over time hours, per Leigh Crabtree's request"
+*******************************/
+
+SELECT
+tot.EMPLOYEEID
+",prs.PERSONNUM"
+",tot.ADJAPPLYDTM            SHIFT_DATE"
+",MIN(tot.STARTDTM)          SHIFT_START_DT"
+",MAX(tot.ENDDTM)            SHIFT_END_DT"
+"--,LEAD(tot.ADJAPPLYDTM, 1) OVER(PARTITION BY tot.EMPLOYEEID ORDER BY tot.ADJAPPLYDTM)    TIME_SHEET_END_DATE"
+"--,tot.APPLYDTM               TIME_POSTED_DATE"
+"--,pc.NAME                    PAY_CODE_NAME"
+"--,tot.PAYCODEID"
+",SUM(tot.DURATIONSECSQTY/3600)      HOURS_WORKED --Already accounts for time off."
+",COUNT(DISTINCT(tot.ADJAPPLYDTM))   DAYS_WORKED_2 --old logic"
+",case when SUM(tot.DURATIONSECSQTY/3600) <=5 then 0.5*COUNT(DISTINCT(tot.ADJAPPLYDTM))"
+when SUM(tot.DURATIONSECSQTY/3600)>5 then 1*COUNT(DISTINCT(tot.ADJAPPLYDTM))
+END AS DAYS_WORKED --New Logic Requested by Care Team
+
+
+
+FROM
+WFCTOTAL tot
+INNER JOIN PAYCODE pc ON tot.PAYCODEID = pc.PAYCODEID
+INNER JOIN JAIDS emp ON tot.EMPLOYEEID = emp.EMPLOYEEID
+INNER JOIN PERSON prs on emp.PERSONID = prs.PERSONID
+INNER JOIN WTKEMPLOYEE sup ON tot.EMPLOYEEID = sup.WTKEMPLOYEEID
+
+
+
+
+WHERE
+"tot.PAYCODEID IN  (141/*REG-REGULAR*/, 137 /*OVERTIME*/) --Using this criteria so that the only time included is actual time worked."
+AND
+"tot.ADJAPPLYDTM BETWEEN ADD_MONTHS(TRUNC(SYSDATE, 'YYYY'), -24) AND TRUNC(SYSDATE)-1"
+AND tot.APPLYDTM/*post date*/ = tot.ADJAPPLYDTM/*shift date*/
+AND pc.TYPE = 'P'/*PAYCODE TYPE*/
+"AND sup.SUPERVISORID IN (73793/*Rebecca Arriaga*/, 38559/*Val Williams*/, 56679/*Leigh Crabtree*/, 70931/*Danny Mack*/, 33621/*Heather Aaron*/, 37176/*Heather Pattison*/, 67137/*Adrian Hawley*/) --This criteria will need to be updated to reference a department or cost center long term."
+--AND tot.EMPLOYEEID = 142420 --97059/*IAN HATLEE*/
+--AND prs.PERSONNUM = '1033688'
+--AND pm.EFFECTIVEDTM <= tot.APPLYDTM
+--AND pm.EXPIRATIONDTM > tot.APPLYDTM
+
+
+
+
+GROUP BY
+tot.EMPLOYEEID
+",prs.PERSONNUM"
+",tot.ADJAPPLYDTM"
+
+
+ORDER BY
+tot.EMPLOYEEID
+",tot.ADJAPPLYDTM"""
+"""/******************************"
+**  Ticke#:
+**  Name: Digital Med - Team Member Kronos Time
+**  Requested By: Rebecca Arriaga
+**  Description: This query pulls in the time/days worked and taken off from Kronos
+**  Author: Jackson Wilde
+**  Date: 03.21.2023
+
+
+
+
+*******************************
+**  Change History
+*******************************
+**  Version   Date              Author            Description
+**  -------   --------          ------------      ----------------------------------
+**  1         03.21.2023        Jackson Wilde     V1: Created
+**  2         04.11.2023        Jackson Wilde     V2: Updated to use the WFCTOTAL table based on information recieved from Peter Thompson about the Kronos data structure.
+**  3         04.12.2023        Jackson Wilde     V3: Removed unecessary joins and limited query to only pulling in the REG-Regular paycode since this should already account for time off.
+**  4         08.15.2023        Aili Zhou         V4: Changed Days_Worked logic to count days with less than 5 hours worked as half days
+"**  5         10.20.2023        Aili Zhou         V5: Added Paycode 137 to include over time hours, per Leigh Crabtree's request"
+*******************************/
+
+SELECT
+tot.EMPLOYEEID
+",prs.PERSONNUM"
+",tot.ADJAPPLYDTM            SHIFT_DATE"
+",MIN(tot.STARTDTM)          SHIFT_START_DT"
+",MAX(tot.ENDDTM)            SHIFT_END_DT"
+"--,LEAD(tot.ADJAPPLYDTM, 1) OVER(PARTITION BY tot.EMPLOYEEID ORDER BY tot.ADJAPPLYDTM)    TIME_SHEET_END_DATE"
+"--,tot.APPLYDTM               TIME_POSTED_DATE"
+"--,pc.NAME                    PAY_CODE_NAME"
+"--,tot.PAYCODEID"
+",SUM(tot.DURATIONSECSQTY/3600)      HOURS_WORKED --Already accounts for time off."
+",COUNT(DISTINCT(tot.ADJAPPLYDTM))   DAYS_WORKED_2 --old logic"
+",case when SUM(tot.DURATIONSECSQTY/3600) <=5 then 0.5*COUNT(DISTINCT(tot.ADJAPPLYDTM))"
+when SUM(tot.DURATIONSECSQTY/3600)>5 then 1*COUNT(DISTINCT(tot.ADJAPPLYDTM))
+END AS DAYS_WORKED --New Logic Requested by Care Team
+
+
+
+FROM
+WFCTOTAL tot
+INNER JOIN PAYCODE pc ON tot.PAYCODEID = pc.PAYCODEID
+INNER JOIN JAIDS emp ON tot.EMPLOYEEID = emp.EMPLOYEEID
+INNER JOIN PERSON prs on emp.PERSONID = prs.PERSONID
+INNER JOIN WTKEMPLOYEE sup ON tot.EMPLOYEEID = sup.WTKEMPLOYEEID
+
+
+
+
+WHERE
+"tot.PAYCODEID IN  (141/*REG-REGULAR*/, 137 /*OVERTIME*/) --Using this criteria so that the only time included is actual time worked."
+AND
+"tot.ADJAPPLYDTM BETWEEN ADD_MONTHS(TRUNC(SYSDATE, 'YYYY'), -24) AND TRUNC(SYSDATE)-1"
+AND tot.APPLYDTM/*post date*/ = tot.ADJAPPLYDTM/*shift date*/
+AND pc.TYPE = 'P'/*PAYCODE TYPE*/
+"AND sup.SUPERVISORID IN (73793/*Rebecca Arriaga*/, 38559/*Val Williams*/, 56679/*Leigh Crabtree*/, 70931/*Danny Mack*/, 33621/*Heather Aaron*/, 37176/*Heather Pattison*/, 67137/*Adrian Hawley*/) --This criteria will need to be updated to reference a department or cost center long term."
+--AND tot.EMPLOYEEID = 142420 --97059/*IAN HATLEE*/
+--AND prs.PERSONNUM = '1033688'
+--AND pm.EFFECTIVEDTM <= tot.APPLYDTM
+--AND pm.EXPIRATIONDTM > tot.APPLYDTM
+
+
+
+
+GROUP BY
+tot.EMPLOYEEID
+",prs.PERSONNUM"
+",tot.ADJAPPLYDTM"
+
+
+ORDER BY
+tot.EMPLOYEEID
+",tot.ADJAPPLYDTM"""
+"""/******************************"
+**  Ticke#:
+**  Name: Digital Med - Team Member Kronos Time
+**  Requested By: Rebecca Arriaga
+**  Description: This query pulls in the time/days worked and taken off from Kronos
+**  Author: Jackson Wilde
+**  Date: 03.21.2023
+
+
+
+
+*******************************
+**  Change History
+*******************************
+**  Version   Date              Author            Description
+**  -------   --------          ------------      ----------------------------------
+**  1         03.21.2023        Jackson Wilde     V1: Created
+**  2         04.11.2023        Jackson Wilde     V2: Updated to use the WFCTOTAL table based on information recieved from Peter Thompson about the Kronos data structure.
+**  3         04.12.2023        Jackson Wilde     V3: Removed unecessary joins and limited query to only pulling in the REG-Regular paycode since this should already account for time off.
+**  4         08.15.2023        Aili Zhou         V4: Changed Days_Worked logic to count days with less than 5 hours worked as half days
+"**  5         10.20.2023        Aili Zhou         V5: Added Paycode 137 to include over time hours, per Leigh Crabtree's request"
+*******************************/
+
+SELECT
+tot.EMPLOYEEID
+",prs.PERSONNUM"
+",tot.ADJAPPLYDTM            SHIFT_DATE"
+",MIN(tot.STARTDTM)          SHIFT_START_DT"
+",MAX(tot.ENDDTM)            SHIFT_END_DT"
+"--,LEAD(tot.ADJAPPLYDTM, 1) OVER(PARTITION BY tot.EMPLOYEEID ORDER BY tot.ADJAPPLYDTM)    TIME_SHEET_END_DATE"
+"--,tot.APPLYDTM               TIME_POSTED_DATE"
+"--,pc.NAME                    PAY_CODE_NAME"
+"--,tot.PAYCODEID"
+",SUM(tot.DURATIONSECSQTY/3600)      HOURS_WORKED --Already accounts for time off."
+",COUNT(DISTINCT(tot.ADJAPPLYDTM))   DAYS_WORKED_2 --old logic"
+",case when SUM(tot.DURATIONSECSQTY/3600) <=5 then 0.5*COUNT(DISTINCT(tot.ADJAPPLYDTM))"
+when SUM(tot.DURATIONSECSQTY/3600)>5 then 1*COUNT(DISTINCT(tot.ADJAPPLYDTM))
+END AS DAYS_WORKED --New Logic Requested by Care Team
+
+
+
+FROM
+WFCTOTAL tot
+INNER JOIN PAYCODE pc ON tot.PAYCODEID = pc.PAYCODEID
+INNER JOIN JAIDS emp ON tot.EMPLOYEEID = emp.EMPLOYEEID
+INNER JOIN PERSON prs on emp.PERSONID = prs.PERSONID
+INNER JOIN WTKEMPLOYEE sup ON tot.EMPLOYEEID = sup.WTKEMPLOYEEID
+
+
+
+
+WHERE
+"tot.PAYCODEID IN  (141/*REG-REGULAR*/, 137 /*OVERTIME*/) --Using this criteria so that the only time included is actual time worked."
+AND
+"tot.ADJAPPLYDTM BETWEEN ADD_MONTHS(TRUNC(SYSDATE, 'YYYY'), -24) AND TRUNC(SYSDATE)-1"
+AND tot.APPLYDTM/*post date*/ = tot.ADJAPPLYDTM/*shift date*/
+AND pc.TYPE = 'P'/*PAYCODE TYPE*/
+"AND sup.SUPERVISORID IN (73793/*Rebecca Arriaga*/, 38559/*Val Williams*/, 56679/*Leigh Crabtree*/, 70931/*Danny Mack*/, 33621/*Heather Aaron*/, 37176/*Heather Pattison*/, 67137/*Adrian Hawley*/) --This criteria will need to be updated to reference a department or cost center long term."
+--AND tot.EMPLOYEEID = 142420 --97059/*IAN HATLEE*/
+--AND prs.PERSONNUM = '1033688'
+--AND pm.EFFECTIVEDTM <= tot.APPLYDTM
+--AND pm.EXPIRATIONDTM > tot.APPLYDTM
+
+
+
+
+GROUP BY
+tot.EMPLOYEEID
+",prs.PERSONNUM"
+",tot.ADJAPPLYDTM"
+
+
+ORDER BY
+tot.EMPLOYEEID
+",tot.ADJAPPLYDTM"""
+"""SELECT"
+
+"""""_users"""".""""id"""" AS """"_users_id"""","
+"upper(""""_users"""".""""name"""") AS """"_users_name"""","
+"""""_users"""".""""login_at"""" AS """"login_at"""","
+"""""_users"""".""""friendly_name"""" AS """"friendly_name"""","
+"""""_users"""".""""domain_id"""" AS """"domain_id"""","
+"""""_users"""".""""system_user_id"""" AS """"_users_system_user_id"""","
+"""""_users"""".""""domain_name"""" AS """"_users_domain_name"""","
+"""""_users"""".""""domain_short_name"""" AS """"domain_short_name"""","
+"""""_users"""".""""site_id"""" AS """"_users_site_id"""","
+"si.name as Site_Name,"
+"users.site_role_id,"
+case when _system_users.admin_level = '10' then '10000000'
+"else  sr.licensing_rank end as licensing_rank,"
+case when _system_users.admin_level = '10' then 'System Admin'
+"else  sr.display_name end as """"Site Role"""""
+
+"FROM """"public"""".""""_users"""" """"_users"""""
+--8461
+inner join users
+"on """"users"""".""""system_user_id"""" = """"_users"""".""""system_user_id"""""
+"and """"users"""".""""site_id"""" = """"_users"""".""""site_id"""""
+left join site_roles sr
+on users.site_role_id = sr.id
+left join sites si
+on users.site_id = si.id
+left join _system_users
+"on """"users"""".""""system_user_id"""" = """"_system_users"""".""""id"""""
+"where """"_users"""".""""name"""" not in ('_system','guest','svc.tabrunas')"""
+"""select i.*, T.PHONE_CALL_TYPE_DESC"
+from analytics.phone_call_type_intervals i
+left join analytics.phone_call_types t on i.phone_call_type_id = t.phone_call_type_id
+"where i.phone_call_type_id in (1747, 1775, 1774, 1739, 1740, 1741, 1742, 1743, 1744, 1745, 1746, 1748"
+", 2583, 2584, 2585, 2586) --starting with 2's added in 2020"
+and T.PHONE_CALL_TYPE_DESC is not null
+"and interval_start_date_id >= 20220101"""
+"""SELECT"
+"CT.EnterpriseName,"
+"CT.CallTypeID ,"
+"CONVERT(DATETIME,Convert(Date,CTI.DateTime)) as Call_Date ,"
+"CONVERT(DATETIME, CONVERT(VARCHAR(13), CTI.DateTime, 120) + ':00:00') as Call_StartDate_Hour,	"
+"Sum(ISNULL(CTI.CallsHandled,0))  as CallsHandled,"
+"Sum(ISNULL(CTI.CallsOffered,0)) as CallsOffered,"
+"Sum(ISNULL(CTI.CallsAnswered,0)) as CallsAnswered,"
+"Sum(ISNULL(CTI.TotalCallsAband,0)) as CallsAbandoned,"
+"Sum(ISNULL(CTI.CallsRONA,0)) as CallsRONA,"
+"sum(isnull(CTI.RouterQueueWaitTime,0)) as RouterQueueWaitTime,"
+"sum(isnull(CTI.RouterQueueCalls,0)) as RouterQueueCalls,"
+"sum(isnull(CTI.MaxCallWaitTime,0)) as MaxCallWaitTime,"
+"sum(isnull(CTI.HandleTime,0)) as HandleTime,"
+"sum(isnull(CTI.CallsRouted,0)) as CallsRouted,"
+"sum(isnull(CTI.MaxCallsQueued,0)) as MaxCallsQueued,"
+"sum(isnull(CTI.MaxHoldTime,0)) as MaxHoldTime,"
+"sum(isnull(CTI.ReturnBusy,0))  as ReturnBusy,"
+"sum(isnull(CTI.AnswerWaitTime,0))  as AnswerWaitTime"
+FROM Call_Type CT
+JOIN Call_Type_Interval CTI  ON CT.CallTypeID = CTI.CallTypeID
+
+WHERE
+CTI.DateTime >= '2024-05-01'
+"	 AND"
+
+"	  CT.CallTypeID IN ("
+"--5088, -- OPT 1 replace with 5123"
+"5123,"
+"--5089, --OPT4 and OPT2 replace with 5072."
+"10084, -- Work number OPT 3 (newly created today)"
+"5072, -- payroll"
+"10085, -- New Payroll (newly created today)"
+"5090,"
+"--5091,"
+"--5092, -- OPT 5 (leader line) replace with 10083"
+"10083,"
+"6943,"
+"7304,"
+"7305,"
+"7306,"
+"5080,"
+"5120, --this is OPT 6"
+5121 -- voicemail
+)
+group by
+"CT.EnterpriseName,"
+"CT.CallTypeID,"
+"CONVERT(DATETIME,Convert(Date,CTI.DateTime)),"
+"CONVERT(DATETIME, CONVERT(VARCHAR(13), CTI.DateTime, 120) + ':00:00')"""
+"""/*"
+Purpose:
+This script is the data source for the Tableau workbook Connnected MOM - Program Offer Rates by Provider.
+"OB wants to see all of their providers listed in the dashboard, whether they are particpating in the"
+Connected MOM program or not.  So a list of all OB providers with their participation status is left
+joined to data about OB visits.
+Author: Kent Boyer
+Last Updated: 11/12/2021
+*/
+WITH
+OB_Providers as
+(
+SELECT
+"ser.PROV_NAME """"Provider"""""
+",prov_type.NAME as """"Provider Type"""""
+",ser.PROV_ID"
+",dep.DEPARTMENT_NAME """"Provider Primary Department"""""
+",dep.GL_PREFIX as """"Provider Cost Center"""""
+",loc.LOC_NAME as """"Provider Primary Location"""""
+",sa.SERV_AREA_NAME """"Service Area"""""
+",case when x_emp.DM_PROGRAMS_C = 3 then 'Y' else 'N' end """"Participating"""""
+FROM
+CLARITY_EMP emp
+INNER JOIN
+CLARITY_SER ser on emp.PROV_ID = ser.PROV_ID
+"and ser.PROV_TYPE in ('Physician','Midwife','Nurse Practitioner','Resident','Physician Assistant')"
+INNER JOIN
+CLARITY_SER_2 ser2 on ser.PROV_ID = ser2.PROV_ID
+INNER JOIN
+CLARITY_DEP dep on ser2.PRIMARY_DEPT_ID = dep.DEPARTMENT_ID
+INNER JOIN
+CLARITY_LOC loc on dep.REV_LOC_ID = loc.LOC_ID
+INNER JOIN
+ZC_PROV_TYPE prov_type on ser.PROVIDER_TYPE_C = prov_type.PROV_TYPE_C
+LEFT JOIN
+X_EMP_DIGMED_ENROLL_PROG x_emp on emp.USER_ID = x_emp.USER_NUMBER_ID and x_emp.DM_PROGRAMS_C = 3
+LEFT JOIN
+CLARITY_SA sa on dep.SERV_AREA_ID = sa.SERV_AREA_ID
+WHERE 1 = 1
+"and dep.SPECIALTY in ('Obstetrics and Gynecology','Obstetrics')"
+--and dep.SERV_AREA_ID = 10
+and ser.ACTIVE_STATUS = 'Active'
+and emp.USER_STATUS_C = 1
+and emp.PROV_ID is not NULL
+GROUP BY
+ser.PROV_NAME
+",prov_type.NAME"
+",ser.PROV_ID"
+",dep.DEPARTMENT_NAME"
+",dep.GL_PREFIX"
+",loc.LOC_NAME"
+",sa.SERV_AREA_NAME"
+",case when x_emp.DM_PROGRAMS_C = 3 then 'Y' else 'N' end"
+
+)
+--select count(*) from OB_Providers; --4.2 sec
+",programs as"
+"	("
+"	SELECT"
+"		'Connected MOM' as """"Program"""""
+"		,4021 as """"Eligibility Alert ID"""""
+"		,108795 as """"Enrollment Order ID"""""
+"	FROM DUAL"
+"	)"
+
+",pregnancies as"
+/* ********************************************************
+pregnancies - One row per pregnancy episode
+********************************************************* */
+(
+SELECT
+"hsb_pregnancy.EPISODE_ID as """"Pregnancy Episode ID"""""
+",hsb_pregnancy.PAT_LINK_ID as """"Mother EPT"""""
+",hsb_pregnancy.START_DATE as """"Pregnancy Episode Start"""""
+",hsb_pregnancy.END_DATE as """"Pregnancy Episode End"""""
+",case"
+When Hsb_Pregnancy_2.Ob_Delivery_Date Is Not Null Then Hsb_Pregnancy_2.Ob_Delivery_Date
+when hsb_pregnancy_2.OB_DELIVERY_DATE is null and hsb_delivery_2.OB_DEL_BIRTH_DTTM is not NULL then EPIC_UTIL.EFN_UTC_TO_LOCAL(hsb_delivery_2.OB_DEL_BIRTH_DTTM)
+when hsb_pregnancy_2.OB_DELIVERY_DATE is null and hsb_delivery_2.OB_DEL_BIRTH_DTTM is null and delivery_admit.HOSP_ADMSN_TIME is not NULL then delivery_admit.HOSP_ADMSN_TIME
+"end as """"Delivery Date"""""
+--Determine date of conception
+",case"
+"--Simplify the logic by coalescing hsb_pregnancy_2.OB_DELIVERY_DATE,hsb_delivery_2.OB_DEL_BIRTH_DTTM and delivery_admit.HOSP_ADMSN_TIME"
+-- We know the delivery date
+"when coalesce(hsb_pregnancy_2.OB_DELIVERY_DATE,EPIC_UTIL.EFN_UTC_TO_LOCAL(hsb_delivery_2.OB_DEL_BIRTH_DTTM),delivery_admit.HOSP_ADMSN_TIME) is not NULL"
+"then COALESCE(hsb_pregnancy_2.OB_DELIVERY_DATE,EPIC_UTIL.EFN_UTC_TO_LOCAL(hsb_delivery_2.OB_DEL_BIRTH_DTTM),delivery_admit.HOSP_ADMSN_TIME) - COALESCE(hsb_delivery_2.OB_HX_GEST_AGE,  (40*7))"
+-- We don't know the delivery date
+"when coalesce(hsb_pregnancy_2.OB_DELIVERY_DATE,EPIC_UTIL.EFN_UTC_TO_LOCAL(hsb_delivery_2.OB_DEL_BIRTH_DTTM),delivery_admit.HOSP_ADMSN_TIME) is NULL then"
+case
+--We know the working delivery date
+when hsb_pregnancy.OB_WRK_EDD_DT is not NULL
+then hsb_pregnancy.OB_WRK_EDD_DT - (40*7) -- We will estimate based on normal pregnancy length
+--We don't know either the delivery date or the working delivery date. We got nothing.
+else NULL
+end
+"end """"Date of Conception"""""
+",ser_ob.PROV_ID as """"Linked Obstetrician ID"""""
+FROM
+EPISODE hsb_pregnancy
+LEFT JOIN EPISODE hsb_delivery on hsb_pregnancy.EPISODE_ID = hsb_delivery.OB_DEL_PREG_EPI_ID
+LEFT JOIN OB_HSB_DELIVERY hsb_pregnancy_2 on hsb_delivery.EPISODE_ID = hsb_pregnancy_2.SUMMARY_BLOCK_ID --This is mom's delivery record
+LEFT JOIN OB_HSB_DELIVERY hsb_delivery_2 on hsb_delivery.EPISODE_ID = hsb_delivery_2.SUMMARY_BLOCK_ID -- This is baby's delivery record
+--In case both hsb_pregnancy_2.OB_DELIVERY_DATE and hsb_delivery_2.OB_DEL_BIRTH_DTTM are null
+LEFT JOIN PAT_ENC_HSP delivery_admit on hsb_pregnancy_2.DELIVERY_DATE_CSN = delivery_admit.PAT_ENC_CSN_ID
+LEFT JOIN EPSD_CARE_PROVIDER hsb_pregnancy_lnkd_prov on hsb_pregnancy.EPISODE_ID = hsb_pregnancy_lnkd_prov.SUMMARY_BLOCK_ID
+and hsb_pregnancy_lnkd_prov.LINE = 1
+and hsb_pregnancy_lnkd_prov.CARE_ROLE_C = 6 -- Obstetrician  [6]
+LEFT JOIN CLARITY_SER ser_ob on hsb_pregnancy_lnkd_prov.CARE_PROVIDER_ID = ser_ob.PROV_ID
+INNER JOIN PATIENT pt on hsb_pregnancy.PAT_LINK_ID  = pt.PAT_ID
+WHERE
+1 = 1
+"--and pt.PAT_MRN_ID	= '10063864'	 -------- Sample MRN"
+and hsb_pregnancy.START_DATE >= date '2016-11-01' -- Start of Connected MOM
+and hsb_pregnancy.SUM_BLK_TYPE_ID = 2 -- PREGNANCY [2]
+and (hsb_delivery.SUM_BLK_TYPE_ID = 14 or hsb_delivery.SUM_BLK_TYPE_ID is null) -- DELIVERY [14]
+and hsb_pregnancy.STATUS_C <> 3 -- Deleted [3]
+--Found an episode with the same start and end date along with another one with same start date for same patient
+--Apparently user decided there was something amiss with the first episode and resolved it instead of deleteing it
+"and hsb_pregnancy.START_DATE < nvl(hsb_pregnancy.END_DATE,trunc(SYSDATE))"
+--and hsb_pregnancy.PAT_LINK_ID = :EPT
+--and hsb_pregnancy.EPISODE_ID = :HSB
+GROUP BY
+hsb_pregnancy.EPISODE_ID
+",hsb_pregnancy.PAT_LINK_ID"
+",hsb_pregnancy.START_DATE"
+",hsb_pregnancy.END_DATE"
+",case"
+When Hsb_Pregnancy_2.Ob_Delivery_Date Is Not Null Then Hsb_Pregnancy_2.Ob_Delivery_Date
+when hsb_pregnancy_2.OB_DELIVERY_DATE is null and hsb_delivery_2.OB_DEL_BIRTH_DTTM is not NULL then EPIC_UTIL.EFN_UTC_TO_LOCAL(hsb_delivery_2.OB_DEL_BIRTH_DTTM)
+when hsb_pregnancy_2.OB_DELIVERY_DATE is null and hsb_delivery_2.OB_DEL_BIRTH_DTTM is null and delivery_admit.HOSP_ADMSN_TIME is not NULL then delivery_admit.HOSP_ADMSN_TIME
+end
+--Determine date of conception
+",case"
+"--Simplify the logic by coalescing hsb_pregnancy_2.OB_DELIVERY_DATE,hsb_delivery_2.OB_DEL_BIRTH_DTTM and delivery_admit.HOSP_ADMSN_TIME"
+-- We know the delivery date
+"when coalesce(hsb_pregnancy_2.OB_DELIVERY_DATE,EPIC_UTIL.EFN_UTC_TO_LOCAL(hsb_delivery_2.OB_DEL_BIRTH_DTTM),delivery_admit.HOSP_ADMSN_TIME) is not NULL"
+"then COALESCE(hsb_pregnancy_2.OB_DELIVERY_DATE,EPIC_UTIL.EFN_UTC_TO_LOCAL(hsb_delivery_2.OB_DEL_BIRTH_DTTM),delivery_admit.HOSP_ADMSN_TIME) - COALESCE(hsb_delivery_2.OB_HX_GEST_AGE,  (40*7))"
+-- We don't know the delivery date
+"when coalesce(hsb_pregnancy_2.OB_DELIVERY_DATE,EPIC_UTIL.EFN_UTC_TO_LOCAL(hsb_delivery_2.OB_DEL_BIRTH_DTTM),delivery_admit.HOSP_ADMSN_TIME) is NULL then"
+case
+--We know the working delivery date
+when hsb_pregnancy.OB_WRK_EDD_DT is not NULL
+then hsb_pregnancy.OB_WRK_EDD_DT - (40*7) -- We will estimate based on normal pregnancy length
+--We don't know either the delivery date or the working delivery date. We got nothing.
+else NULL
+end
+end
+",ser_ob.PROV_ID"
+
+)
+--select * from pregnancies;
+"--select count(*) from pregnancies; --28 sec/ 76,145 records/65,844 distinct EPT"
+
+",Prenatal_Encounters as"
+(
+/* ************************************************************************************
+Returns set of Prenatal encounters and associated information occuring within an episodes start and end dates
+************************************************************************************ */
+SELECT
+"pregnancies.""""Pregnancy Episode ID"""""
+",enc.PAT_ENC_CSN_ID"
+",enc.CONTACT_DATE """"Prenatal Encounter Date"""""
+",enc.ENC_TYPE_C """"Encounter Type"""""
+",ty.NAME """"Encounter Type Name"""""
+",enc.DEPARTMENT_ID as """"Encounter Department ID"""""
+",dep.DEPARTMENT_NAME as """"Encounter Department Name"""""
+",enc.BP_SYSTOLIC """"Systolic"""""
+",enc.BP_DIASTOLIC """"Diastolic"""""
+",enc.WEIGHT """"Weight"""""
+",coverage.PAYOR_ID """"Payor ID"""""
+",epm.PAYOR_NAME """"Payor Name"""""
+",coverage.PLAN_ID """"Plan"""""
+",epm.FINANCIAL_CLASS """"Financial Class"""""
+",fc.FINANCIAL_CLASS_NAME """"Financial Class Name"""""
+",ROW_NUMBER() OVER (PARTITION BY pregnancies.""""Pregnancy Episode ID"""" ORDER BY enc.CONTACT_DATE ASC) """"Row_Asc"""""
+",ROW_NUMBER() OVER (PARTITION BY pregnancies.""""Pregnancy Episode ID"""" ORDER BY enc.CONTACT_DATE DESC) """"Row_Desc"""""
+FROM
+pregnancies
+"INNER JOIN PAT_ENC enc on pregnancies.""""Mother EPT"""" = enc.PAT_ID"
+"and enc.CONTACT_DATE >= pregnancies.""""Date of Conception"""""
+"-- and enc.CONTACT_DATE <= pregnancies.""""Delivery Date"""""
+"and enc.CONTACT_DATE <= coalesce(pregnancies.""""Delivery Date"""",pregnancies.""""Pregnancy Episode End"""",trunc(SYSDATE) - 1)"
+"and enc.ENC_TYPE_C IN (1200,1201) -- Initial Prenatal [1201]; Routine Prenatal [1200]"
+and enc.APPT_STATUS_C = 2 -- Completed
+LEFT JOIN COVERAGE coverage on enc.COVERAGE_ID = coverage.COVERAGE_ID
+LEFT JOIN CLARITY_EPM epm on coverage.PAYOR_ID = epm.PAYOR_ID
+LEFT JOIN CLARITY_FC fc ON epm.FINANCIAL_CLASS = fc.FINANCIAL_CLASS
+LEFT JOIN ZC_DISP_ENC_TYPE ty ON enc.ENC_TYPE_C = ty.DISP_ENC_TYPE_C
+LEFT JOIN CLARITY_DEP dep ON enc.DEPARTMENT_ID = dep.DEPARTMENT_ID
+)
+
+
+",most_seen_ob as"
+(
+/* *************************************************************************
+One row per patient
+This was added to handle cases where the patient is not linked with an OB Provider in Epic.
+It counts the number of prenatal visits with a physician or nurse midwife whose speciality
+"is OB or OB/GYN and selects the provider with the most visits as the """"inferred"""" obstetrician"
+************************************************************************* */
+SELECT
+PAT_ID
+",PROV_ID"
+",""""Inferred Obstetrician"""""
+",""""Inferred Ob Department"""""
+",""""Inferred Ob Location"""""
+",""""OB License Type"""""
+",""""Pregnancy Episode ID"""""
+",""""Linked Obstetrician ID"""""
+",""""First Visit"""""
+",""""Last Visit"""""
+",""""Total Visits"""" as """"Visits with this OB"""""
+FROM
+(
+SELECT
+PAT_ID
+",PROV_ID"
+",""""Inferred Obstetrician"""""
+",""""Inferred Ob Department"""""
+",""""Inferred Ob Location"""""
+",""""OB License Type"""""
+",""""Pregnancy Episode ID"""""
+",""""Linked Obstetrician ID"""""
+",""""First Visit"""""
+",""""Last Visit"""""
+",""""Total Visits"""""
+",row_number() over (partition by PAT_ID,""""Pregnancy Episode ID"""" order by """"Total Visits"""" desc) as rowno"
+FROM
+(
+SELECT DISTINCT
+visits.PAT_ID
+",ser.PROV_ID"
+",ser.PROV_NAME """"Inferred Obstetrician"""""
+",dep.DEPARTMENT_NAME """"Inferred Ob Department"""""
+",loc.LOC_NAME """"Inferred Ob Location"""""
+",lic.LICENSE_TYPE """"OB License Type"""""
+",visits.""""Pregnancy Episode ID"""""
+",visits.""""Linked Obstetrician ID"""""
+",min(CONTACT_DATE) """"First Visit"""""
+",max(CONTACT_DATE) """"Last Visit"""""
+",count(distinct PAT_ENC_CSN_ID) as """"Total Visits"""""
+FROM
+(
+SELECT DISTINCT
+"pregnancies.""""Pregnancy Episode ID"""""
+",pregnancies.""""Linked Obstetrician ID"""""
+",enc.PAT_ID"
+",enc.PAT_ENC_CSN_ID"
+",enc.VISIT_PROV_ID"
+",enc.CONTACT_DATE"
+FROM
+pregnancies
+"INNER JOIN PAT_ENC enc on pregnancies.""""Mother EPT"""" = enc.PAT_ID"
+"and enc.CONTACT_DATE >= pregnancies.""""Date of Conception"""""
+"and enc.CONTACT_DATE <= nvl(pregnancies.""""Delivery Date"""",trunc(SYSDATE) - 1)"
+"and enc.ENC_TYPE_C in (1200,1201) -- Routine and Initial Prenatal Encounter Types"
+and enc.APPT_STATUS_C = 2 -- Completed
+INNER JOIN CLARITY_DEP dep on enc.DEPARTMENT_ID = dep.DEPARTMENT_ID
+INNER JOIN CLARITY_SER ser on enc.VISIT_PROV_ID = ser.PROV_ID
+WHERE
+enc.CONTACT_DATE >= date '2016-11-01' -- Start of Connected MOM
+"--and pregnancies.""""Pregnancy Episode ID"""" = :HSB"
+"--and (pregnancies.""""Mother EPT"""" = :EPT or :EPT is NULL)"
+) visits
+INNER JOIN
+Clarity_Ser Ser On Visits.Visit_Prov_Id = Ser.Prov_Id
+"and upper(ser.PROV_TYPE) in ('PHYSICIAN','MIDWIFE')"
+INNER JOIN
+CLARITY_SER_LICEN2 lic on ser.PROV_ID = lic.PROV_ID
+INNER JOIN
+CLARITY_SER_2 ser2 on ser.PROV_ID = ser2.PROV_ID
+INNER JOIN
+CLARITY_DEP dep on ser2.PRIMARY_DEPT_ID = dep.DEPARTMENT_ID
+INNER JOIN
+CLARITY_LOC loc on dep.REV_LOC_ID = loc.LOC_ID
+INNER JOIN
+CLARITY_EMP emp ON ser.PROV_ID = emp.PROV_ID
+WHERE
+"dep.SPECIALTY in ('Obstetrics and Gynecology','Obstetrics')"
+--and dep.SERV_AREA_ID = 10
+GROUP BY
+visits.PAT_ID
+",ser.PROV_ID"
+",ser.PROV_NAME"
+",dep.DEPARTMENT_NAME"
+",loc.LOC_NAME"
+",lic.LICENSE_TYPE"
+",visits.""""Pregnancy Episode ID"""""
+",visits.""""Linked Obstetrician ID"""""
+)
+)
+WHERE
+rowno = 1
+)
+/*
+",alerts as"
+(
+SELECT
+ALT_ID
+",PAT_ID"
+",PAT_CSN"
+",BPA_LOCATOR_ID"
+FROM
+ALERT
+WHERE
+"		GENERAL_ALT_TYPE_C = 1 -- BestPractice Advisory [1]"
+"		and BPA_LOCATOR_ID = 4021 -- BASE-DIGMED-CONNECTED MOM-ELIGIBLE PATIENT ENROLLMENT BPA [4021]"
+
+)
+*/
+
+--select count(*) from alerts;
+",eligiblity_bpas as"
+"	("
+"	SELECT"
+"		/*+MATERIALIZE  PARALLEL(6) */"
+"		alt.ALT_ID as """"ALT"""""
+"		,alt.PAT_ID as """"EPT"""""
+"		,alt.PAT_CSN as """"CSN"""""
+"		,alt.BPA_LOCATOR_ID as """"Eligibility Alert ID"""""
+"--,pregnancies.""""Pregnancy Episode ID"""""
+",enc.VISIT_PROV_ID"
+",trunc(alt2.ALT_ACTION_INST) as """"Eligibility Alert Date"""""
+",MAX(CASE when alt2.SPEC_OVR_RSN_C  = '172' then 1 else 0 end) as """"Not Appropriate"""""
+",MAX(CASE when alt2.SPEC_OVR_RSN_C  = '11' then 1 else 0 end) as """"Patient Refused"""""
+",MAX(CASE when alt2.SPEC_OVR_RSN_C  = '148' then 1 else 0 end) as """"No Smartphone"""""
+",MAX(CASE when alt2.SPEC_OVR_RSN_C  = '49' then 1 else 0 end) as """"Ask Again Later"""""
+
+/*
+"148	No Compatible SmartPhone"
+"49	No"
+"11	Patient Refused"
+"172	Not Appropriate for Patient"
+*/
+"	FROM"
+"		ALERT alt"
+--alerts alt
+"--INNER JOIN pregnancies on alt.PAT_ID = pregnancies.""""Mother EPT"""""
+"		LEFT JOIN ALT_HISTORY alt2 on alt.ALT_ID = alt2.ALT_ID"
+"		--LEFT JOIN ZC_ALRT_SP_OVR_RSN reason on alt2.SPEC_OVR_RSN_C = reason.ALRT_SP_OVR_RSN_C"
+INNER JOIN PAT_ENC enc on alt.PAT_CSN = enc.PAT_ENC_CSN_ID
+"	WHERE 1 = 1"
+"		and Alt.General_Alt_Type_C = 1 -- BestPractice Advisory [1]"
+"		and Alt.Bpa_Locator_Id = 4021 -- BASE-DIGMED-CONNECTED MOM-ELIGIBLE PATIENT ENROLLMENT BPA [4021]"
+"--If there is no delivery date, assume the pregnancy episode was over 10 months (304 days) after conseption"
+"--and alt2.ALT_ACTION_INST between pregnancies.""""Date of Conception"""" and NVL(pregnancies.""""Delivery Date"""",(pregnancies.""""Date of Conception"""" + 304))"
+"--and (pregnancies.""""Mother EPT"""" = :EPT or :EPT is null)"
+and trunc(alt2.ALT_ACTION_INST) = trunc(enc.contact_date)
+"	GROUP BY"
+"		alt.ALT_ID"
+"		,alt.PAT_ID"
+"		,alt.PAT_CSN"
+"		,alt.BPA_LOCATOR_ID"
+"--,pregnancies.""""Pregnancy Episode ID"""""
+",enc.VISIT_PROV_ID"
+",trunc(alt2.ALT_ACTION_INST)"
+"	)"
+--select * from eligiblity_bpas;
+",digmed_orders_CSN as"
+"	("
+"	SELECT DISTINCT"
+"		/* MATERIALIZE */"
+"		proc.PAT_ENC_CSN_ID as """"CSN"""""
+"		,proc.PROC_ID as """"Enrollment Order ID"""""
+",proc.ORDERING_DATE as """"Order Date"""""
+"		,1 as """"Order Placed"""""
+"	FROM"
+"		eligiblity_bpas"
+"		INNER JOIN ORDER_PROC proc on eligiblity_bpas.""""CSN"""" = proc.PAT_ENC_CSN_ID"
+"			and proc.PROC_ID = 108795 -- DIGITAL MEDICINE - CONNECTED MOM [MYC23]"
+"	)"
+
+",digmed_orders_EPS as"
+"	("
+"	SELECT DISTINCT"
+"		/* MATERIALIZE */"
+"		--proc.PAT_ENC_CSN_ID as """"CSN"""""
+"pregnancies.""""Pregnancy Episode ID"""""
+"		,min(proc.PROC_ID) as """"Enrollment Order ID"""""
+",min(proc.ORDERING_DATE) as """"Order Date"""""
+"		,min(1) as """"Order Placed"""""
+"	FROM"
+"		eligiblity_bpas"
+"		INNER JOIN ORDER_PROC proc on eligiblity_bpas.""""CSN"""" = proc.PAT_ENC_CSN_ID"
+"			and proc.PROC_ID = 108795 -- DIGITAL MEDICINE - CONNECTED MOM [MYC23]"
+"LEFT JOIN pregnancies ON eligiblity_bpas.EPT = pregnancies.""""Mother EPT"""""
+"AND eligiblity_bpas.""""Eligibility Alert Date"""" between trunc(pregnancies.""""Date of Conception"""") and coalesce(pregnancies.""""Delivery Date"""", pregnancies.""""Pregnancy Episode End"""",trunc(SYSDATE - 1))"
+"Group by pregnancies.""""Pregnancy Episode ID"""""
+"	)"
+",Digmed_orders as"
+(
+SELECT DISTINCT
+/* MATERIALIZE */
+"pregnancies.""""Pregnancy Episode ID"""""
+",pregnancies.""""Pregnancy Episode Start"""""
+",pregnancies.""""Pregnancy Episode End"""""
+",pregnancies.""""Date of Conception"""""
+",MIN(TRUNC((enc.CONTACT_DATE - pregnancies.""""Date of Conception"""")/7)) """"Enrollment Ordered at Week"""""
+",enc.PAT_ENC_CSN_ID"
+",proc.ORDERING_DATE as """"Enrollment Order Date"""""
+",proc.AUTHRZING_PROV_ID as """"Enrollment Order Provider ID"""""
+",enc.CONTACT_DATE as """"Enrollment Encounter Date"""""
+",enc.ENC_TYPE_C as """"Enrollment Encounter Type"""""
+",enc.DEPARTMENT_ID as """"Enrollment Encounter Department"""""
+FROM
+pregnancies
+"--    LEFT JOIN connected_mom on connected_mom.""""Pregnancy Episode ID"""" = pregnancies.""""Pregnancy Episode ID"""""
+"--    INNER JOIN PAT_ENC enc on connected_mom.""""Patient ID"""" = enc.PAT_ID"
+"INNER JOIN PAT_ENC enc on pregnancies.""""Mother EPT"""" = enc.PAT_ID"
+INNER JOIN ORDER_PROC proc on enc.PAT_ENC_CSN_ID = proc.PAT_ENC_CSN_ID
+and proc.PROC_ID = 108795 -- DIGITAL MEDICINE - CONNECTED MOM [MYC23]
+WHERE
+"--    TRUNC((enc.CONTACT_DATE - pregnancies.""""Date of Conception"""")/7) between 0 and 30 --We are only interested in orders from this pregnancy"
+"TRUNC(enc.CONTACT_DATE) BETWEEN TRUNC(pregnancies.""""Date of Conception"""") AND COALESCE( TRUNC(pregnancies.""""Delivery Date""""), TRUNC(pregnancies.""""Pregnancy Episode End""""))"
+"-- and pregnancies.""""Pregnancy Episode ID"""" = :HSB"
+GROUP BY
+"pregnancies.""""Pregnancy Episode ID"""""
+",pregnancies.""""Pregnancy Episode Start"""""
+",pregnancies.""""Pregnancy Episode End"""""
+",pregnancies.""""Date of Conception"""""
+",enc.PAT_ENC_CSN_ID"
+",proc.ORDERING_DATE"
+",proc.AUTHRZING_PROV_ID"
+",enc.CONTACT_DATE"
+",enc.ENC_TYPE_C"
+",enc.DEPARTMENT_ID"
+)
+", selected_provider as"
+(
+SELECT
+"p.""""Mother EPT"""""
+",   p.""""Pregnancy Episode ID"""""
+",   p.""""Pregnancy Episode Start"""""
+",   p.""""Pregnancy Episode End"""""
+",   p.""""Date of Conception"""""
+",   p.""""Linked Obstetrician ID"""""
+",   linked_prov.""""Provider"""" as """"Linked Provider"""""
+",   linked_prov.""""Provider Primary Department"""" as """"Linked Provider Department"""""
+",   linked_prov.""""Provider Primary Location"""" as """"Linked Provider Location"""""
+",   linked_prov.""""Provider Type"""" as """"Linked Provider Type"""""
+",   linked_prov.""""Service Area"""" as """"Linked Service Area"""""
+",   ob.PROV_ID as """"Inferred Prov ID"""""
+",   ob.""""Inferred Obstetrician"""""
+",   ob.""""Inferred Ob Department"""""
+",   ob.""""Inferred Ob Location"""""
+",   inferred_prov.""""Provider Type"""" as """"Inferred Provider Type"""""
+",   inferred_prov.""""Service Area"""" as """"Inferred Service Area"""""
+",   d.""""Enrollment Order Provider ID"""""
+",   d.""""Enrollment Encounter Department"""""
+",   pe.""""Encounter Department Name"""""
+",   enroll_prov.PROV_ID as """"Enrollment Provider ID"""""
+",   enroll_prov.""""Provider"""" as """"Enrollment Provider"""""
+",   enroll_prov.""""Provider Type"""" as """"Enrollment Provider Type"""""
+",   enroll_prov.""""Service Area"""" as """"Enrollment Service Area"""""
+
+FROM pregnancies p
+"LEFT JOIN most_seen_ob ob ON p.""""Pregnancy Episode ID"""" = ob.""""Pregnancy Episode ID"""""
+LEFT JOIN OB_Providers inferred_prov ON ob.PROV_ID = inferred_prov.PROV_ID
+"LEFT JOIN OB_Providers linked_prov ON p.""""Linked Obstetrician ID"""" = linked_prov.PROV_ID"
+"LEFT JOIN Digmed_orders d ON p.""""Pregnancy Episode ID"""" = d.""""Pregnancy Episode ID"""""
+"LEFT JOIN OB_Providers enroll_prov ON d.""""Enrollment Order Provider ID"""" = enroll_prov.PROV_ID"
+LEFT JOIN Prenatal_Encounters pe ON d.PAT_ENC_CSN_ID = pe.PAT_ENC_CSN_ID
+)
+
+--select * from digmed_orders;
+",OB_Visits as"
+(
+SELECT
+"pregnancies.""""Pregnancy Episode ID"""""
+",enc.PAT_ENC_CSN_ID as """"Pregnancy Prenatal Encounters"""""
+"--,count(distinct enc.PAT_ENC_CSN_ID) as """"OB Visits"""""
+FROM
+pregnancies
+"INNER JOIN PAT_ENC enc on pregnancies.""""Mother EPT"""" = enc.PAT_ID"
+"and enc.CONTACT_DATE between pregnancies.""""Date of Conception"""" and nvl(pregnancies.""""Delivery Date"""",trunc(SYSDATE) - 1)"
+"--and enc.CONTACT_DATE <= nvl(pregnancies.""""Delivery Date"""",trunc(SYSDATE) - 1)"
+"and enc.ENC_TYPE_C in (1200,1201,101) -- Routine and Initial Prenatal Encounter Types"
+and enc.APPT_STATUS_C = 2 -- Completed
+--and enc.PAT_ID = 'Z2967225'
+--and (enc.PAT_ID = :EPT or :EPT is NULL)
+GROUP BY
+"pregnancies.""""Pregnancy Episode ID"""""
+",enc.PAT_ENC_CSN_ID"
+
+)
+
+", enrollment_reg as"
+(
+SELECT
+active_events.ept_id as PAT_ID
+",active_events.rdt_id"
+",case when inactive_events.registry_status = 'Inactive' then 'Inactive' else 'Active' end registry_status"
+",active_events.change_instant as start_date"
+",MAX(inactive_events.change_instant) KEEP (DENSE_RANK FIRST ORDER BY inactive_events.change_instant ASC) as end_date"
+FROM
+(
+SELECT
+REGISTRY_DATA_INFO.NETWORKED_ID as ept_id
+",REGISTRY_DATA_INFO.RECORD_ID as rdt_id"
+",ZC_METRIC_STATUS.NAME as registry_status"
+",EPIC_UTIL.EFN_UTC_TO_LOCAL(REG_DATA_HX_MEMBERSHIP.CHANGE_INSTANT_UTC_DTTM) as change_instant"
+FROM
+REG_DATA_HX_MEMBERSHIP
+INNER JOIN ZC_METRIC_STATUS on REG_DATA_HX_MEMBERSHIP.STATUS_C = ZC_METRIC_STATUS.METRIC_STATUS_C
+INNER JOIN REGISTRY_DATA_INFO on REG_DATA_HX_MEMBERSHIP.RECORD_ID = REGISTRY_DATA_INFO.RECORD_ID
+WHERE
+REG_DATA_HX_MEMBERSHIP.REGISTRY_ID = 100237
+) active_events
+LEFT JOIN
+(
+SELECT
+REGISTRY_DATA_INFO.NETWORKED_ID as ept_id
+",REGISTRY_DATA_INFO.RECORD_ID as rdt_id"
+",ZC_METRIC_STATUS.NAME as registry_status"
+",EPIC_UTIL.EFN_UTC_TO_LOCAL(REG_DATA_HX_MEMBERSHIP.CHANGE_INSTANT_UTC_DTTM) as change_instant"
+FROM
+REG_DATA_HX_MEMBERSHIP
+INNER JOIN ZC_METRIC_STATUS on REG_DATA_HX_MEMBERSHIP.STATUS_C = ZC_METRIC_STATUS.METRIC_STATUS_C
+INNER JOIN REGISTRY_DATA_INFO on REG_DATA_HX_MEMBERSHIP.RECORD_ID = REGISTRY_DATA_INFO.RECORD_ID
+WHERE
+REG_DATA_HX_MEMBERSHIP.REGISTRY_ID = 100237
+) inactive_events on inactive_events.registry_status = 'Inactive'
+and active_events.ept_id = inactive_events.ept_id
+and active_events.change_instant <= inactive_events.change_instant
+WHERE
+active_events.registry_status = 'Active'
+GROUP BY
+active_events.ept_id
+",active_events.rdt_id"
+",case when inactive_events.registry_status = 'Inactive' then 'Inactive' else 'Active' end"
+",active_events.change_instant"
+)
+
+
+--select * from ob_visits;
+",OB_Patients as"
+(
+/*
+"This CTE returns one line for each patient who had an eligibility BPA fire during a visit with """"their"""" OB (Linked or Most Seen)."
+"Included is patient MRN, name,visit provider ID, whether the provider responded"
+"to the enrollment offer BPA with any of the four valid responses,"
+"a concatenation of all the responses, an """"Order Rate"""" and a """"Response Rate"""" (these last two have a value of 0 or 1),"
+"the number of OB visits where an elgiblity BPA fired, the number of visits where an offer to participate was extended"
+and the number of OB visits during the patient's elgibility period (week 10 to 20).
+The names were intended to make the Tableau workbook easier to understand (for the developer).
+A previous version of the dashboard used all the BPA response columns but the current workbook only uses
+"""""Response Rate"""""
+*/
+SELECT /* MATERIALIZE PARALLEL(6) */
+"pt.PAT_MRN_ID as """"MRN"""""
+",pt.PAT_ID"
+",pt.PAT_NAME as """"Patient Name"""""
+",pregnancies.""""Pregnancy Episode ID"""""
+",pregnancies.""""Pregnancy Episode Start"""""
+",pregnancies.""""Pregnancy Episode End"""""
+",pregnancies.""""Linked Obstetrician ID"""""
+",most_seen_ob.""""Visits with this OB"""""
+",sp.""""Enrollment Provider ID"""""
+"--If the episode has a provider on the enrollment order, use them, else use the linked OB.  Otherwise use the most seen OB."
+"--,case when pregnancies.""""Linked Obstetrician ID"""" is not NULL then pregnancies.""""Linked Obstetrician ID"""" else most_seen_ob.PROV_ID end PROV_ID"
+",coalesce(sp.""""Enrollment Provider ID"""",pregnancies.""""Linked Obstetrician ID"""",most_seen_ob.PROV_ID) as PROV_ID"
+"--,min(enc.CONTACT_DATE)  as """"1st Appt"""""
+",enc.CONTACT_DATE  as Appt_Date"
+",pregnancies.""""Date of Conception"""""
+",pregnancies.""""Delivery Date"""""
+",enc.PAT_ENC_CSN_ID as CSN"
+",enctype.name as encounter_type"
+",eligiblity_bpas.""""Not Appropriate"""" as """"Not Appropriate"""""
+",eligiblity_bpas.""""Patient Refused"""" as """"Patient Refused"""""
+",eligiblity_bpas.""""No Smartphone"""" as """"No Smartphone"""""
+",eligiblity_bpas.""""Ask Again Later"""" as """"Ask Again Later"""""
+",eligiblity_bpas.""""Eligibility Alert Date"""""
+"--,max(eligiblity_bpas.""""Alert Response (Last)"""") as """"Alert Response (Last)"""""
+"--,max(eligiblity_bpas.""""Alert Response (All)"""") as """"Alert Response (All)"""""
+",NVL(Digmed_Orders_CSN.""""Order Placed"""", 0) as """"Order Placed CSN"""""
+",NVL(Digmed_Orders_EPS.""""Order Placed"""", 0) as """"Order Placed Episode"""""
+"/*,max( CASE"
+"when digmed_orders.""""Order Placed"""" = 1 then 1"
+"when """"Not Appropriate"""" = 1 then 1"
+"when """"Patient Refused"""" = 1 then 1"
+"when """"No Smartphone"""" = 1 then 1"
+else 0
+end
+")  as """"Responses"""""
+*/
+", enc.PAT_ENC_CSN_ID """"Visits where BPA fired"""""
+",CASE"
+"when Digmed_Orders_CSN.""""Order Placed"""" = 1"
+"or """"Not Appropriate"""" = 1"
+"or """"Patient Refused"""" = 1"
+"or """"No Smartphone"""" = 1 then 1"
+else 0
+end
+"""""Visits where offer was made"""""
+",case"
+"when TRUNC((enc.CONTACT_DATE - pregnancies.""""Date of Conception"""")/7) between 10 and 20"
+then 1
+else 0
+end
+"""""Visits during eligibility"""""
+",en_reg.registry_status"
+",en_reg.start_date"
+",en_reg.end_date"
+FROM
+eligiblity_bpas
+--I'm assuming the BPA won't fire if the patient is not pregnant
+"--INNER JOIN pregnancies on eligiblity_bpas.""""Pregnancy Episode ID"""" = pregnancies.""""Pregnancy Episode ID"""""
+"INNER JOIN pregnancies on eligiblity_bpas.EPT = pregnancies.""""Mother EPT"""""
+"INNER JOIN programs on eligiblity_bpas.""""Eligibility Alert ID"""" = programs.""""Eligibility Alert ID"""""
+"INNER JOIN PAT_ENC enc on eligiblity_bpas.""""CSN"""" = enc.PAT_ENC_CSN_ID"
+INNER  JOIN ZC_DISP_ENC_TYPE       enctype   ON enc.ENC_TYPE_C            = enctype.DISP_ENC_TYPE_C
+INNER JOIN PATIENT pt on enc.PAT_ID = pt.PAT_ID
+INNER JOIN CLARITY_DEP dep on enc.DEPARTMENT_ID = dep.DEPARTMENT_ID
+INNER JOIN CLARITY_SER ser on enc.VISIT_PROV_ID = ser.PROV_ID
+--Only include patients who are seeing an OB?
+"LEFT JOIN most_seen_ob on pregnancies.""""Pregnancy Episode ID"""" = most_seen_ob.""""Pregnancy Episode ID"""""
+--INNER JOIN CLARITY_EMP emp on most_seen_ob.PROV_ID = emp.PROV_ID
+INNER JOIN ZC_DISP_ENC_TYPE enc_type on enc.ENC_TYPE_C = enc_type.DISP_ENC_TYPE_C
+"Left Join Digmed_Orders_CSN On Eligiblity_Bpas.""""CSN"""" = Digmed_Orders_CSN.""""CSN"""""
+"Left Join Digmed_Orders_EPS On pregnancies.""""Pregnancy Episode ID"""" = Digmed_Orders_EPS.""""Pregnancy Episode ID"""""
+--LEFT JOIN X_EMP_DIGMED_ENROLL_PROG x_emp on emp.USER_ID = x_emp.USER_NUMBER_ID and x_emp.DM_PROGRAMS_C = 3 --Redundant with ob_providers CTE
+Left Join enrollment_reg en_reg on en_reg.PAT_ID = eligiblity_bpas.EPT
+"and (trunc(en_reg.START_DATE) between trunc(pregnancies.""""Pregnancy Episode Start"""")"
+"and  nvl(pregnancies.""""Pregnancy Episode End"""",trunc(SYSDATE - 1)))"
+"Left Join selected_provider sp ON pregnancies.""""Pregnancy Episode ID"""" = sp.""""Pregnancy Episode ID"""""
+
+WHERE 1 = 1
+and ser.STAFF_RESOURCE_C = 1 -- Person [1]
+"and enc.ENC_TYPE_C in (1200,1201,101)"
+"--We are only interested in the the BPAs that happened when they were seeing """"their"""" (linked or most seen) OB"
+
+--BRODIE UPDATE
+"--and eligiblity_bpas.VISIT_PROV_ID = coalesce(pregnancies.""""Linked Obstetrician ID"""",most_seen_ob.PROV_ID)"
+
+--That happened during this pregnancy episode
+"and eligiblity_bpas.""""Eligibility Alert Date"""" between trunc(pregnancies.""""Date of Conception"""") and coalesce(pregnancies.""""Delivery Date"""", pregnancies.""""Pregnancy Episode End"""",trunc(SYSDATE - 1))"
+--and ser.STAFF_RESOURCE_C = 1 -- Person [1]
+--    and enc.CONTACT_DATE >= trunc(SYSDATE) - 365  --This query won't complete for longer periods
+"--and (pregnancies.""""Mother EPT"""" = :EPT or :EPT is null)"
+--and pt.PAT_MRN_ID = :MRN
+/*
+GROUP BY
+pt.PAT_MRN_ID
+",pt.PAT_ID"
+",pt.PAT_NAME"
+",pregnancies.""""Pregnancy Episode ID"""""
+",pregnancies.""""Pregnancy Episode Start"""""
+",pregnancies.""""Pregnancy Episode End"""""
+",pregnancies.""""Linked Obstetrician ID"""""
+",most_seen_ob.""""Visits with this OB"""""
+",coalesce(pregnancies.""""Linked Obstetrician ID"""",most_seen_ob.PROV_ID)"
+",pregnancies.""""Date of Conception"""""
+",pregnancies.""""Delivery Date"""""
+",enc.CONTACT_DATE"
+",eligiblity_bpas.""""CSN"""""
+",enctype.name"
+*/
+)
+
+--select * from ob_patients;
+"--select count(*) from ob_patients; --12,080 distinct MRN"
+SELECT distinct
+"OB_Providers.""""Provider"""""
+",OB_Providers.""""Provider Type"""""
+"--,OB_Providers.PROV_ID"
+",OB_Providers.""""Provider Primary Department"""""
+",OB_Providers.""""Provider Cost Center"""""
+",OB_Providers.""""Provider Primary Location"""""
+",OB_Providers.""""Participating"""""
+"--,case when most_seen_ob.""""Linked Obstetrician ID"""" is NULL then 'Y' else 'N' end """"Patient's Inferred OB"""""
+",case when OB_Patients.PROV_ID <> OB_Patients.""""Enrollment Provider ID"""""
+"THEN CASE WHEN OB_Patients.""""Linked Obstetrician ID"""" <> OB_Patients.PROV_ID then 'Y' else 'N' end END """"Patient's Inferred OB"""""
+",OB_Patients.PAT_ID"
+",OB_Patients.MRN"
+",OB_Patients.CSN"
+",OB_Patients.""""Eligibility Alert Date"""""
+",OB_Patients.encounter_type"
+",OB_Patients.""""Patient Name"""""
+",OB_Patients.PROV_ID"
+",OB_Patients.""""Linked Obstetrician ID"""""
+",OB_Patients.""""Enrollment Provider ID"""""
+"--,OB_Patients.""""1st Appt"""""
+",OB_Patients.Appt_Date"
+",OB_Patients.""""Not Appropriate"""""
+",OB_Patients.""""Patient Refused"""""
+",OB_Patients.""""No Smartphone"""""
+",OB_Patients.""""Ask Again Later"""""
+"--,OB_Patients.""""Alert Response (Last)"""""
+"--,OB_Patients.""""Alert Response (All)"""""
+",OB_Patients.""""Order Placed CSN"""""
+",OB_Patients.""""Order Placed Episode"""""
+"--,OB_Patients.""""Responses"""""
+",OB_patients.""""Visits where BPA fired"""""
+",OB_patients.""""Visits where offer was made"""""
+",OB_patients.""""Visits during eligibility"""""
+",OB_patients.""""Pregnancy Episode ID"""""
+",OB_patients.""""Pregnancy Episode Start"""""
+",OB_patients.""""Pregnancy Episode End"""""
+",OB_patients.start_date as registry_enroll_date"
+",OB_patients.end_date as registry_unenroll_date"
+",OB_patients.""""Visits with this OB"""""
+"--,OB_Visits.""""OB Visits"""""
+",trunc(OB_patients.""""Date of Conception"""") as """"Date of Conception"""""
+",trunc(OB_patients.""""Delivery Date"""") as """"Delivery Date"""""
+",OB_patients.registry_status"
+FROM
+OB_Patients
+LEFT JOIN OB_Providers on OB_Providers.PROV_ID = OB_Patients.PROV_ID
+"--LEFT JOIN most_seen_ob on OB_Patients.""""Pregnancy Episode ID"""" = most_seen_ob.""""Pregnancy Episode ID"""""
+"--Full Outer JOIN OB_Visits on OB_Patients.""""Pregnancy Episode ID"""" = OB_Visits.""""Pregnancy Episode ID"""""
+"--and OB_Patients.CSN  =  OB_Visits.""""Pregnancy Prenatal Encounters"""""""
+Select * from PRIMARY_PANEL_CONTINUITY_PROV
+"""WITH PROV_AUDIT as ("
+SELECT
+
+"DEPARTMENT_ID,"
+"AUDIT_DATETIME,"
+"PROV_ID,"
+"TMPLT_AUDIT_ACT_C,"
+"USER_ID,"
+"AUDIT_DETAILS,"
+"row_number () over (partition by department_id, prov_id order by AUDIT_DATETIME desc) as test_rank"
+
+
+
+FROM
+TEMPLATE_AUDIT_TRL
+where TMPLT_AUDIT_ACT_C = 5
+--and prov_id = '42905'
+)
+
+
+
+",Release as ("
+SELECT
+tat.prov_id
+",tat.department_Id"
+",tat.user_id"
+",tat.AUDIT_DATETIME"
+",tat.AUDIT_DETAILS"
+",emp.name as Last_Release_by"
+",ser2.REL_DT_OFST as SER_OffSet"
+",ser.active_status"
+",prlst.NAME as Prov_Offset_Time_Frame"
+",dep3.VAL_DT_OFST as Dept_OffSet"
+",drlst.NAME as Dept_OffSet_Time_Frame"
+
+",prslt.DEP_REL_OFF as SER_DEPT_OFFSet"
+",prlstz.NAME as Prov_Dep_Offset_Time_Frame"
+",prslt.DEP_REL_DEP"
+
+"--,pdrls.DEP_REL_DEP"
+"--,pdrls.DEP_REL_OFF"
+"--,pdrls.DEP_REL_UNITS_C"
+
+
+
+
+FROM
+CLARITY_SER_2 ser2
+INNER JOIN PROV_AUDIT tat on ser2.prov_id = tat.prov_id and tat.test_rank = 1
+INNER JOIN CLARITY_SER ser on ser2.prov_id = ser.prov_id and ser.active_status_c = 1
+INNER JOIN CLARITY_EMP emp on tat.user_id = emp.user_id
+LEFT JOIN ZC_REL_DT_OFST_TF prlst on ser2.REL_DT_OFST_TF_C = prlst.REL_DT_OFST_TF_C
+--LEFT JOIN PROV_DEP_REL_DATE pdrls on ser2.prov_id = pdrls.prov_id
+LEFT JOIN CLARITY_DEP_3 dep3 on tat.department_id = dep3.department_ID
+LEFT JOIN ZC_REL_DT_OFST_TF drlst on dep3.REL_DT_OFST_TF_C = drlst.REL_DT_OFST_TF_C
+LEFT JOIN CLARITY_SER_DEPT serd on ser2.prov_id = serd.prov_id and dep3.department_ID = serd.department_id and serd.INACT_CAD_DEPT_YN = 'N'
+LEFT JOIN PROV_DEP_REL_DATE prslt on serd.prov_id = prslt.prov_id and dep3.department_ID = prslt.dep_rel_dep
+LEFT JOIN ZC_REL_DT_OFST_TF prlstz on prslt.DEP_REL_UNITS_C = prlstz.REL_DT_OFST_TF_C
+--WHERE ser2.PROV_ID = '640'
+)
+
+
+SELECT rls.*
+",coalesce (rls.SER_DEPT_OFFSet, rls.SER_OffSet, rls.Dept_OffSet) as Main_Temp_Offset"
+",coalesce (rls.Prov_Dep_Offset_Time_Frame ,rls.Prov_Offset_Time_Frame, rls.Dept_OffSet_Time_Frame) as Primary_Temp_Offset_Time_Frame"
+
+FROM RELEASE rls
+
+ORDER BY PROV_ID
+
+--SELECT * FROM
+"--PROV_DEP_REL_DATE"""
+"""WITH KRONOS AS ("
+SELECT   /*+ PARALLEL(8) MATERIALIZE */
+"EMP.EMPLOYEE_ID,"
+"EMP.EMPLOYEE_NUMBER,"
+"EMP.NAME     AS EMPLOYEE_NAME,"
+"EMP.CURRENT_EMPLOYEE_STATUS,"
+"EMP.EMPLOYEE_TYPE,"
+"JOB.JOBCODE       AS JOB_CODE,"
+"JOB.DESCRIPTION   AS JOB_DESCRIPTION,"
+"DD.MONTH_NAME     AS CAL_MONTH,"
+"DD.YEAR_NUMBER    AS CAL_YEAR,"
+"DD.MONTH_KEY,"
+"CC.COST_CENTER,"
+"CC.DESCRIPTION CC_DESCRIPTION,"
+"JOB.JOBCODE_ID   AS JOB_CODE_ID,"
+"JOB.JOBCODE AS JOB_CODE_NUM,"
+"REPLAB.REPORTED_HOURS,"
+"PAY.PAYCODE_CATEGORY,"
+"PAY.PAYCODE,"
+PAY.DESCRIPTION PAY_DESCRIPTION
+FROM
+ANALYTICS.REPORTED_LABOR   REPLAB
+LEFT JOIN ANALYTICS.DATE_DIM         DD ON REPLAB.REPORTED_LABOR_DATE_ID = DD.DATE_ID
+LEFT JOIN ANALYTICS.COST_CENTER     CC ON CC.COST_CENTER_ID = REPLAB.COST_CENTER_ID
+LEFT JOIN ANALYTICS.JOBCODES        JOB ON REPLAB.JOBCODE_ID = JOB.JOBCODE_ID
+LEFT JOIN ANALYTICS.PAYCODES        PAY ON REPLAB.PAYCODE_ID = PAY.PAYCODE_ID
+LEFT JOIN ANALYTICS.EMPLOYEES        EMP ON REPLAB.EMPLOYEE_ID = EMP.EMPLOYEE_ID
+WHERE
+1 = 1
+"AND DD.DATE_VALUE BETWEEN TO_DATE('2023-01-01', 'YYYY-MM-DD') AND LAST_DAY(ADD_MONTHS(SYSDATE, - 1))"
+"--AND (( PAY.PAYCODE IN ('CBP', 'EDU','MTG','ORT')  OR PAY.PAYCODE_CATEGORY IN ('NONPROD','OVERTIME','PROD' ) OR PAY.DESCRIPTION LIKE '%DIFFERENTIAL%' ))"
+AND JOB.DESCRIPTION IN (
+"'Coder',"
+"'Coder Specialist',"
+"'Coding Specialist',"
+"'HIM Coder Agency',"
+"'Hospital Coder',"
+"'Hospital Coder Lead',"
+"'Hospital Coder-Certified',"
+"'Physician Coder',"
+"'Physician Coder-Certified',"
+"'RN Clinical Documentation Specialist',"
+"'RN Clinical Documentation Specialist Lead',"
+"'Sr Coder',"
+'Sr Hospital Coder'
+)
+
+"),"
+
+KRONOS_SUM AS (
+
+SELECT
+"'KRNONOS' AS METRIC,"
+"KRONOS.MONTH_KEY,"
+"KRONOS.EMPLOYEE_NUMBER,"
+"KRONOS.EMPLOYEE_NAME,"
+"KRONOS.CURRENT_EMPLOYEE_STATUS,"
+"KRONOS.EMPLOYEE_TYPE,"
+"KRONOS.JOB_CODE_NUM,"
+"KRONOS.JOB_DESCRIPTION,"
+"KRONOS.COST_CENTER,"
+"KRONOS.CC_DESCRIPTION,"
+"NVL(sum(case  when KRONOS.PAYCODE_CATEGORY = 'PROD' then KRONOS.REPORTED_HOURS end),0) AS PRODUCTIVE_HOURS,"
+"NVL(sum(case  when KRONOS.PAYCODE_CATEGORY = 'OVERTIME' then KRONOS.REPORTED_HOURS end),0)  AS OVERTIME_HOURS,"
+"NVL(sum(case  when KRONOS.PAYCODE_CATEGORY = 'NONPROD' then KRONOS.REPORTED_HOURS end),0) AS NON_PRODUCTIVE_HOURS,"
+"NVL(sum(case  when KRONOS.PAYCODE = 'CBP' then KRONOS.REPORTED_HOURS end),0) as CALLBACK_HOURS,"
+"NVL(sum(case  when KRONOS.PAYCODE in ('EDU', 'MTG', 'ORT') then KRONOS.REPORTED_HOURS end),0) as EDU_MTG_ORT_HOURS,"
+"NVL(sum(case  when KRONOS.PAY_DESCRIPTION like '%DIFFERENTIAL%' then KRONOS.REPORTED_HOURS end),0) AS SHIFT_DIFFERENTIAL_HOURS"
+
+FROM KRONOS
+
+GROUP BY
+"KRONOS.MONTH_KEY,"
+"KRONOS.EMPLOYEE_NUMBER,"
+"KRONOS.EMPLOYEE_NAME,"
+"KRONOS.CURRENT_EMPLOYEE_STATUS,"
+"KRONOS.EMPLOYEE_TYPE,"
+"KRONOS.JOB_CODE_NUM,"
+"KRONOS.JOB_DESCRIPTION,"
+"KRONOS.COST_CENTER,"
+KRONOS.CC_DESCRIPTION
+)
+
+SELECT *
+FROM
+KRONOS_SUM
+
+
+"order by KRONOS_SUM.MONTH_KEY, KRONOS_SUM.EMPLOYEE_NUMBER, KRONOS_SUM.COST_CENTER"""
+"""with get_discharges as"
+(
+select *
+from v_readmission_pop_mv
+)
+--==============================================================================
+", get_adlw as"
+(
+select  /*+ MATERIALIZE*/
+"gd.hsp_account_id, SCAN_TIME   as ADLW_scan_date, di.doc_info_type_c"
+from doc_information di
+inner join get_discharges gd on di.doc_pt_id = gd.pat_id
+"where di.doc_info_type_c in ('10','11','202221','202273','202270')"
+"-- Advance Directives and Living Will,Power of Attorney, LaPOST, Living Will, Healthcare Power of Attorney"
+and di.Doc_Stat_c = 10
+"and (di.SCAN_TIME <= COALESCE((gd.index_discharge_date + 7), sysdate)) -- TWD - changed to add 7 days to discharge, to include ACP docusments"
+and di.RECORD_STATE_C is null
+and di.scan_time is not null
+) --select * from get_adlw;
+--==============================================================================
+", get_adlw_doc as"
+( select * from
+(
+"select /*+ MATERIALIZE*/ hsp_account_id, ADLW_scan_date, doc_info_type_c"
+", ROW_NUMBER() over(partition by hsp_account_iD, doc_info_type_c  order by ADLW_scan_date desc ) as adnum"
+", case when doc_info_type_c = '10' then adlw_scan_date end as AD_LW_scan_date"
+from get_adlw adlw
+where doc_info_type_c = '10'
+) where adnum = 1
+)--select * from get_adlw_doc;
+--==============================================================================
+", get_POA_doc as"
+( select * from
+(
+"select /*+ MATERIALIZE*/ hsp_account_id, ADLW_scan_date, doc_info_type_c"
+", ROW_NUMBER() over(partition by hsp_account_iD, doc_info_type_c  order by ADLW_scan_date desc ) as poanum"
+", case when doc_info_type_c = '11' then adlw_scan_date end as POA_scan_date"
+from get_adlw adlw
+where doc_info_type_c = '11'
+) where poanum = 1
+)-- select * from get_poa_doc;
+--==============================================================================
+", get_lapost_doc as"
+( select * from
+(
+"select /*+ MATERIALIZE*/  hsp_account_id, ADLW_scan_date, doc_info_type_c"
+", ROW_NUMBER() over(partition by hsp_account_iD, doc_info_type_c  order by ADLW_scan_date desc ) as lanum"
+", case when doc_info_type_c = '202221' then adlw_scan_date end as LA_POST_scan_date"
+from get_adlw adlw
+where doc_info_type_c = '202221'
+) where lanum = 1
+)-- select * from get_lapost_doc;
+--==============================================================================
+", get_lw_doc as"
+( select * from
+(
+"select /*+ MATERIALIZE*/  hsp_account_id, ADLW_scan_date, doc_info_type_c"
+", ROW_NUMBER() over(partition by hsp_account_iD, doc_info_type_c  order by ADLW_scan_date desc ) as lwnum"
+", case when doc_info_type_c = '202273' then adlw_scan_date end as LW_scan_date"
+from get_adlw adlw
+where doc_info_type_c = '202273'
+) where lwnum = 1
+) --select * from get_lw_doc;
+--==============================================================================
+", get_hcpoa_doc as"
+( select * from
+(
+"select /*+ MATERIALIZE*/  hsp_account_id, ADLW_scan_date, doc_info_type_c"
+", ROW_NUMBER() over(partition by hsp_account_iD, doc_info_type_c  order by ADLW_scan_date desc ) as hcnum"
+", case when doc_info_type_c = '202270' then adlw_scan_date end as HC_POA_scan_date"
+from get_adlw adlw
+where doc_info_type_c = '202270'
+) where hcnum = 1
+) --select * from get_hcpoa_doc;
+--==============================================================================
+", get_Adv_Care_dis as"
+(
+Select *
+from
+(
+select /*+ MATERIALIZE*/
+"gd.hsp_account_id , ROW_NUMBER() over(partition by gd.hsp_account_id order by slu.contact_date desc) as acdnum"
+", slu.contact_date as adv_care_discuss_during_Enctr"
+from SMARTLISTS_USED slu
+inner join get_discharges gd on slu.pat_Enc_csn_id = gd.prim_enc_csn_id
+where smartlist_used_id = '26754'
+) where acdnum = 1
+)  --select * from get_adv_care_dis;
+--==============================================================================
+", get_acp_notes as"
+(
+"Select hsp_account_id,note_type"
+from
+(
+select  /*+ MATERIALIZE*/
+"gd.hsp_account_id,  'ACP' as Note_type, ROW_NUMBER() over(partition by gd.hsp_account_id order by note_id desc) as acpnum"
+from  hno_info hi
+inner join  get_discharges gd on hi.pat_enc_csn_id = gd.prim_enc_csn_id
+where hi.ip_note_type_c = 71
+) where acpnum = 1
+)     --select * from get_acp_notes;
+--==============================================================================
+", get_Adv_Care_dis_sL as"
+(
+"Select hsp_account_id , acp_sl"
+from
+(
+select /*+ MATERIALIZE*/
+"gd.hsp_account_id , ROW_NUMBER() over(partition by gd.hsp_account_id order by line desc) as slnum,"
+smartlink_id as Acp_SL
+from smartlink sl
+inner join NOTE_SMARTLINK_IDS nsi on sl.smartlink_id =nsi.smartlinks_id
+inner join hno_info hi on nsi.note_id = hi.note_id
+inner join get_discharges gd on hi.pat_enc_csn_id = gd.prim_enc_csn_id
+"where sl.smartlink_id in ( 750, 101856)  -- 750 PROG NOTE SECTION ACP - BEGIN; 101856	OHS PROG NOTE SECTION ACP - BEGIN (new code added to script 20200305)"
+)
+where slnum = 1
+)  --select * from get_adv_care_dis_sl;
+--==============================================================================
+", get_GOC_notes as"
+( Select * from
+(
+Select /*+ MATERIALIZE*/
+"gd.hsp_account_id,ROW_NUMBER() over(partition by gd.hsp_account_id order by smartphrases_id) as gocnum"
+", case when smartphrases_id is not null then 1 else 0 end as GOC_note, smartphrases_id"
+from  note_smartphrase_ids nsi
+inner join hno_info hi on nsi.note_id = hi.note_id
+inner join get_discharges gd on hi.pat_enc_csn_id = gd.prim_enc_csn_id
+"where nsi.smartphrases_id in ( 459571,459608,506126,488375,461124,516198,493065,402231,442389,455853,455854,455855,"
+"472423,461740,442390,455856,455857,455858,402225,387596,442391,455859,455860,455861,483151,490177,442393,"
+"455864,455863,455862,455867,455866,455865,442392,402219,445384,509916,509900,156576,188758,233582,245403,290830)"
+) where gocnum =1
+) --select * from get_goc_notes;
+--==============================================================================
+", get_smrtdta as"
+( select * from
+(select   /*+ MATERIALIZE*/
+"gd.hsp_account_id,  ROW_NUMBER() over(partition by gd.hsp_account_id order by sede.element_id) as smtnum"
+", case when element_id is not null then 1 else 0 end as  smrtdta"
+from hno_info hi
+inner join smrtdta_elem_data sede on sede.record_id_varchar = hi.note_id and sede.element_id = 'OHS#18907'
+inner join get_discharges gd on hi.pat_enc_csn_id = gd.prim_enc_csn_id
+)  where smtnum = 1
+) --select * from get_smrtdta;
+--==============================================================================
+", get_acp_goc as"
+(
+select
+gd.prim_enc_csn_id
+", gd.hsp_account_id"
+", pat_mrn_id"
+", pat_id"
+", case when ad_lw_scan_date is not null or"
+POA_scan_date is not null or
+LA_POST_scan_date is not null or
+lw_scan_date is not null or
+hc_POA_scan_date is not null then 1 else 0 end as ADLW_YN
+", ad_lw_scan_date"
+", POA_scan_date"
+", LA_POST_scan_date"
+", lw_scan_date"
+", hc_POA_scan_date"
+", adv_care_discuss_during_Enctr"
+", note_type"
+", acp_sl"
+", goc_note"
+", smrtdta"
+from get_discharges gd
+left outer join get_adlw_doc adlw on adlw.hsp_account_id = gd.hsp_account_id
+left outer join get_POA_doc poa on poa.hsp_account_id = gd.hsp_account_id
+left outer join get_lapost_doc lapost on lapost.hsp_account_id = gd.hsp_account_id
+left outer join get_lw_doc lw on lw.hsp_account_id = gd.hsp_account_id
+left outer join get_hcpoa_doc hcpoa on hcpoa.hsp_account_id = gd.hsp_account_id
+left outer join get_adv_care_dis gacd on gacd.hsp_account_id = gd.hsp_account_id
+left outer join get_acp_notes gacp on gacp.hsp_account_id = gd.hsp_account_id
+left outer join get_adv_care_dis_sl gacsl on gacsl.hsp_account_id = gd.hsp_account_id
+left outer join get_goc_notes ggoc on ggoc.hsp_account_id = gd.hsp_account_id
+left outer join get_smrtdta gsmrt on gsmrt.hsp_account_id = gd.hsp_account_id
+) --select * from get_acp_goc;
+--==============================================================================
+", smoc_visit as"
+(
+select
+gd.pat_id
+",gd.index_csn"
+",gd.index_discharge_date"
+",status.name as status"
+",min(pe.contact_date) as smoc_visit_date"
+from get_discharges gd
+inner join pat_enc pe on gd.pat_id = pe.pat_id
+and trunc(pe.contact_date) >= trunc(gd.index_discharge_date)
+and trunc(pe.contact_date) <= trunc(gd.index_discharge_date + INTERVAL '30' DAY)
+and pe.department_id = '301002554' /*SMOC Discharge Clinic*/
+"and pe.enc_type_c in (101 /*Office Visit*/,50 /*Appointment*/)"
+"and pe.appt_status_c in (2 /*Completed*/, 6 /*Arrived*/)"
+inner join clarity_dep cd on pe.department_id = cd.department_id
+left join zc_appt_status status on pe.appt_status_c = status.appt_status_c
+group by
+gd.pat_id
+",gd.index_csn"
+",status.name"
+",pe.enc_type_c"
+",gd.index_discharge_date"
+)
+
+",final as"
+(
+select distinct
+dc.PAT_ID
+",dc.PAT_MRN_ID"
+",dc.PAT_NAME"
+",dc.BIRTH_DATE"
+",dc.DEATH_DATE"
+",dc.LAST_PCP_VISIT"
+",dc.NEXT_PCP_VISIT"
+",dc.INDEX_SOURCE"
+",dc.INDEX_CSN"
+",dc.INDEX_ADMIT_DATE"
+",dc.INDEX_DISCHARGE_DATE"
+",dc.INDEX_DIAGNOSIS"
+",dc.ICD10"
+",dc.INDEX_DRG_TYPE"
+",dc.INDEX_DISCH_DISP"
+",dc.INDEX_PAT_CLASS"
+",dc.INDEX_DEPT"
+",dc.INDEX_LOCATION"
+",dc.INDEX_SA"
+",dc.INDEX_DISCH_PROV"
+",dc.INDEX_FINANCIAL_CLASS"
+",dc.SOURCE"
+",dc.PAT_CSN"
+",dc.ADMIT_DATE"
+",dc.DISCHARGE_DATE"
+",dc.""""PRIMARY DIAGNOSIS NAME"""""
+",dc.DISCHARGE_DISP"
+",dc.""""PATIENT CLASS"""""
+",dc.DEPARTMENT"
+",dc.LOCATION"
+",dc.""""SERVICE AREA"""""
+",dc.ROSTER_NAME"
+",dc.PFA_PROV_NAME"
+",dc.PFA_PROV_CIN"
+",dc.PFA_PROV_REGION"
+",dc.INDEX_PAYOR_NAME"
+",dc.INDEX_PLAN_NAME"
+",dc.FINANCIAL_REGION"
+",dc.PRIM_ENC_CSN_ID"
+",dc.INPATIENT_DATA_ID"
+",dc.HSP_ACCOUNT_ID"
+",dc.TOTAL_SCORE"
+",dc.PAYOR_MEMBER_ID"
+",dc.WORRY_SCORE"
+",tt_prov.PROV_NAME as CASE_MANAGER_NAME"
+
+",prog.msq_first_dttm"
+",prog.msq_first_value"
+",prog.msq_last_dttm"
+",prog.msq_last_value"
+/*
+",gag.ADLW_YN"
+",gag.ad_lw_scan_date"
+",gag.POA_scan_date"
+",gag.LA_POST_scan_date"
+",gag.lw_scan_date"
+",gag.hc_POA_scan_date"
+",gag.adv_care_discuss_during_Enctr"
+",gag.note_type"
+",gag.acp_sl"
+",gag.goc_note"
+",gag.smrtdta"
+*/
+",prog.""""np at home referred"""""
+",prog.""""np at home completed"""""
+",prog.""""np at home elig"""""
+
+",prog.""""tcc_call_outcome"""""
+",prog.""""tcc_contact_date"""""
+
+",prog.""""PC_Procedure"""""
+",prog.""""PC_Provider"""""
+
+",opcm.""""OPCM ELIGIBLE"""""
+",opcm.LAST_ELIG_DATE"
+
+",opcm.""""OPCM REFERRED"""""
+",opcm.""""OPCM Referral Date"""""
+
+",opcm.""""OPCM ENROLLED"""""
+",opcm.""""OPCM Enrollment Date"""""
+
+",opcm.OPCM_BANNER_RULE_ELIG"
+
+",hosfu.""""APPT CSN"""""
+",hosfu.""""APPT STATUS"""""
+",hosfu.""""APPT DATE"""""
+",hosfu.""""APPT MADE ON DATE"""""
+",hosfu.""""ADMIT TO APPT MADE"""""
+",hosfu.""""APPT MADE TO DC"""""
+",hosfu.""""DC TO APPT DATE"""""
+",hosfu.""""CANCLE REASON"""""
+",hosfu.""""VISIT TYPE ID"""""
+",hosfu.""""VISIT TYPE NAME"""""
+",hosfu.""""VISIT TYPE GROUP ID"""""
+",hosfu.""""VISIT TYPE GROUP NAME"""""
+",hosfu.""""APPT DEP ID"""""
+",hosfu.""""APPT CSN 30 DAY"""""
+",hosfu.""""APPT STATUS 30 DAY"""""
+",hosfu.""""APPT DATE 30 DAY"""""
+",hosfu.""""APPT MADE ON DATE 30 DAY"""""
+",hosfu.""""ADMIT TO APPT MADE 30 DAY"""""
+",hosfu.""""APPT MADE TO DC 30 DAY"""""
+",hosfu.""""DC TO APPT DATE 30 DAY"""""
+",hosfu.""""CANCLE REASON 30 DAY"""""
+",hosfu.""""VISIT TYPE ID 30 DAY"""""
+",hosfu.""""VISIT TYPE NAME 30 DAY"""""
+",hosfu.""""VISIT TYPE GROUP ID 30 DAY"""""
+",hosfu.""""VISIT TYPE GROUP NAME 30 DAY"""""
+",hosfu.""""APPT DEP ID 30 DAY"""""
+",hosfu.""""PRE-ADMIT FU CSN"""""
+",hosfu.""""PRE-ADMIT FU STATUS"""""
+",hosfu.""""PRE-ADMIT FU SCHED DATE"""""
+",hosfu.""""PRE-ADMIT FU MADE ON DATE"""""
+",hosfu.""""PRE-ADMIT MADE DATE TO ADMIT"""""
+",hosfu.""""PRE-ADMIT MADE DATE TO DC"""""
+",hosfu.""""DC TO PRE-ADMIT VISIT DATE"""""
+",hosfu.""""PRE-ADMIT CANCEL REASON"""""
+",hosfu.""""PRE-ADMIT VISIT TYPE ID"""""
+",hosfu.""""PRE-ADMIT VISIT TYPE NAME"""""
+",hosfu.""""PRE-ADMIT VISIT TYPE GROUP ID"""""
+",hosfu.""""PRE-ADMIT VISIT TYPE GROUP NAME"""""
+",hosfu.""""PRE-ADMIT DEPARTMENT ID"""""
+
+",hosfu.EXT_VISIT_DATE"
+",hosfu.EXT_DC_TO_APPT"
+
+"--      ,hosfu.""""FU CSN"""""
+"--      ,hosfu.""""FU STATUS"""""
+"--      ,hosfu.""""FU VISIT TYPE NAME"""""
+"--      ,hosfu.""""DC TO FU VISIT DATE"""""
+
+",mai.""""Day 0 Reply"""""
+",mai.""""Day 1 Reply"""""
+",mai.""""Day 2 Reply"""""
+",mai.""""Day 3 Reply"""""
+",mai.""""Day 7 Reply"""""
+",mai.""""Day 9 Reply"""""
+",mai.""""Day 0 Outgoing"""""
+",mai.""""Day 1 Outgoing"""""
+",mai.""""Day 2 Outgoing"""""
+",mai.""""Day 3 Outgoing"""""
+",mai.""""Day 7 Outgoing"""""
+",mai.""""Day 9 Outgoing"""""
+
+",rx.""""TELERX FLAGGED DTTM"""""
+",rx.""""TELERX INITIATED DTTM"""""
+",rx.""""TELERX CHARTING COMPLETE DTTM"""""
+",rx.""""RXMED ONSITE INITIATED DTTM"""""
+",rx.""""RXMED ONSITE CHARTING COMPLETE DTTM"""""
+",rx.""""ED_FLAG"""""
+
+",sv.SMOC_VISIT_DATE"
+",sv.STATUS as SMOC_VISIT_STATUS"
+",EXTRACT(year from dc.DISCHARGE_DATE) AS date_year"
+",pat.patient_zip"
+",pat.patient_ethnic_group"
+",pat.preferred_language"
+",pat.legal_sex"
+",pat.Race"
+",pat.patient_region"
+",pat.fin_class_name"
+",pat.intrptr_needed_yn"
+",pat.gender_identity"
+",pat.sex_assigned_at_birth"
+",'Readmissions' as metric_name"
+from get_discharges dc
+--left join get_acp_goc gag on dc.PAT_ID = gag.PAT_ID and to_char(dc.PRIM_ENC_CSN_ID) = to_char(gag.PRIM_ENC_CSN_ID)
+left join v_readmission_hosfu_mv hosfu on dc.PAT_ID = hosfu.PAT_ID and dc.INDEX_CSN = hosfu.INDEX_CSN
+left join v_readmission_opcm_mv opcm on dc.PAT_ID = opcm.PAT_ID and dc.INDEX_CSN = opcm.INDEX_CSN
+left join v_readmission_prog_mv prog on dc.PAT_ID = prog.PAT_ID and dc.INDEX_CSN = prog.INDEX_CSN
+left join v_readmission_mai_mv mai on dc.PAT_ID = mai.PAT_ID and dc.INDEX_CSN = mai.INDEX_CSN
+left join v_readmission_rx_mv rx on dc.PAT_ID = rx.PAT_ID and dc.INDEX_CSN = rx.INDEX_CSN
+left join smoc_visit sv on dc.PAT_ID = sv.PAT_ID and dc.INDEX_CSN = sv.INDEX_CSN
+left join PREP_PTW_RACE_DIM pat on pat.pat_mrn_id = dc.pat_mrn_id
+left join (
+"select tt_prov.prov_name, tt.pat_enc_csn_id"
+from
+(
+"select tt.pat_enc_csn_id, min(line) as line"
+from hsp_trtmt_team tt
+where tt.trtmnt_team_rel_c = '22'
+group by tt.pat_enc_csn_id
+) tt
+inner join hsp_trtmt_team tt_1 on tt.pat_enc_csn_id = tt_1.pat_enc_csn_id
+and tt.line = tt_1.line
+left join clarity_ser tt_prov on tt_1.prov_id = tt_prov.prov_id
+) tt_prov on to_char(dc.INDEX_CSN) = to_char(tt_prov.PAT_ENC_CSN_ID)
+)
+--select * from final;
+
+select
+"final.*,"
+ptw_goals.goal_value
+
+from final
+left join ptw_goals@nexus  on ptw_goals.year = final.date_year
+--and UPPER(ptw_goals.region_facility) = UPPER(final.region)  --remove
+"and substr(ptw_goals.goal_name,1,length(ptw_goals.goal_name)-7) = final.metric_name"
+"and region_facility = 'OHS'"""
+"""with get_discharges as"
+(
+select *
+from v_readmission_pop_mv
+)
+--==============================================================================
+", get_adlw as"
+(
+select  /*+ MATERIALIZE*/
+"gd.hsp_account_id, SCAN_TIME   as ADLW_scan_date, di.doc_info_type_c"
+from doc_information di
+inner join get_discharges gd on di.doc_pt_id = gd.pat_id
+"where di.doc_info_type_c in ('10','11','202221','202273','202270')"
+"-- Advance Directives and Living Will,Power of Attorney, LaPOST, Living Will, Healthcare Power of Attorney"
+and di.Doc_Stat_c = 10
+"and (di.SCAN_TIME <= COALESCE((gd.index_discharge_date + 7), sysdate)) -- TWD - changed to add 7 days to discharge, to include ACP docusments"
+and di.RECORD_STATE_C is null
+and di.scan_time is not null
+) --select * from get_adlw;
+--==============================================================================
+", get_adlw_doc as"
+( select * from
+(
+"select /*+ MATERIALIZE*/ hsp_account_id, ADLW_scan_date, doc_info_type_c"
+", ROW_NUMBER() over(partition by hsp_account_iD, doc_info_type_c  order by ADLW_scan_date desc ) as adnum"
+", case when doc_info_type_c = '10' then adlw_scan_date end as AD_LW_scan_date"
+from get_adlw adlw
+where doc_info_type_c = '10'
+) where adnum = 1
+)--select * from get_adlw_doc;
+--==============================================================================
+", get_POA_doc as"
+( select * from
+(
+"select /*+ MATERIALIZE*/ hsp_account_id, ADLW_scan_date, doc_info_type_c"
+", ROW_NUMBER() over(partition by hsp_account_iD, doc_info_type_c  order by ADLW_scan_date desc ) as poanum"
+", case when doc_info_type_c = '11' then adlw_scan_date end as POA_scan_date"
+from get_adlw adlw
+where doc_info_type_c = '11'
+) where poanum = 1
+)-- select * from get_poa_doc;
+--==============================================================================
+", get_lapost_doc as"
+( select * from
+(
+"select /*+ MATERIALIZE*/  hsp_account_id, ADLW_scan_date, doc_info_type_c"
+", ROW_NUMBER() over(partition by hsp_account_iD, doc_info_type_c  order by ADLW_scan_date desc ) as lanum"
+", case when doc_info_type_c = '202221' then adlw_scan_date end as LA_POST_scan_date"
+from get_adlw adlw
+where doc_info_type_c = '202221'
+) where lanum = 1
+)-- select * from get_lapost_doc;
+--==============================================================================
+", get_lw_doc as"
+( select * from
+(
+"select /*+ MATERIALIZE*/  hsp_account_id, ADLW_scan_date, doc_info_type_c"
+", ROW_NUMBER() over(partition by hsp_account_iD, doc_info_type_c  order by ADLW_scan_date desc ) as lwnum"
+", case when doc_info_type_c = '202273' then adlw_scan_date end as LW_scan_date"
+from get_adlw adlw
+where doc_info_type_c = '202273'
+) where lwnum = 1
+) --select * from get_lw_doc;
+--==============================================================================
+", get_hcpoa_doc as"
+( select * from
+(
+"select /*+ MATERIALIZE*/  hsp_account_id, ADLW_scan_date, doc_info_type_c"
+", ROW_NUMBER() over(partition by hsp_account_iD, doc_info_type_c  order by ADLW_scan_date desc ) as hcnum"
+", case when doc_info_type_c = '202270' then adlw_scan_date end as HC_POA_scan_date"
+from get_adlw adlw
+where doc_info_type_c = '202270'
+) where hcnum = 1
+) --select * from get_hcpoa_doc;
+--==============================================================================
+", get_Adv_Care_dis as"
+(
+Select *
+from
+(
+select /*+ MATERIALIZE*/
+"gd.hsp_account_id , ROW_NUMBER() over(partition by gd.hsp_account_id order by slu.contact_date desc) as acdnum"
+", slu.contact_date as adv_care_discuss_during_Enctr"
+from SMARTLISTS_USED slu
+inner join get_discharges gd on slu.pat_Enc_csn_id = gd.prim_enc_csn_id
+where smartlist_used_id = '26754'
+) where acdnum = 1
+)  --select * from get_adv_care_dis;
+--==============================================================================
+", get_acp_notes as"
+(
+"Select hsp_account_id,note_type"
+from
+(
+select  /*+ MATERIALIZE*/
+"gd.hsp_account_id,  'ACP' as Note_type, ROW_NUMBER() over(partition by gd.hsp_account_id order by note_id desc) as acpnum"
+from  hno_info hi
+inner join  get_discharges gd on hi.pat_enc_csn_id = gd.prim_enc_csn_id
+where hi.ip_note_type_c = 71
+) where acpnum = 1
+)     --select * from get_acp_notes;
+--==============================================================================
+", get_Adv_Care_dis_sL as"
+(
+"Select hsp_account_id , acp_sl"
+from
+(
+select /*+ MATERIALIZE*/
+"gd.hsp_account_id , ROW_NUMBER() over(partition by gd.hsp_account_id order by line desc) as slnum,"
+smartlink_id as Acp_SL
+from smartlink sl
+inner join NOTE_SMARTLINK_IDS nsi on sl.smartlink_id =nsi.smartlinks_id
+inner join hno_info hi on nsi.note_id = hi.note_id
+inner join get_discharges gd on hi.pat_enc_csn_id = gd.prim_enc_csn_id
+"where sl.smartlink_id in ( 750, 101856)  -- 750 PROG NOTE SECTION ACP - BEGIN; 101856	OHS PROG NOTE SECTION ACP - BEGIN (new code added to script 20200305)"
+)
+where slnum = 1
+)  --select * from get_adv_care_dis_sl;
+--==============================================================================
+", get_GOC_notes as"
+( Select * from
+(
+Select /*+ MATERIALIZE*/
+"gd.hsp_account_id,ROW_NUMBER() over(partition by gd.hsp_account_id order by smartphrases_id) as gocnum"
+", case when smartphrases_id is not null then 1 else 0 end as GOC_note, smartphrases_id"
+from  note_smartphrase_ids nsi
+inner join hno_info hi on nsi.note_id = hi.note_id
+inner join get_discharges gd on hi.pat_enc_csn_id = gd.prim_enc_csn_id
+"where nsi.smartphrases_id in ( 459571,459608,506126,488375,461124,516198,493065,402231,442389,455853,455854,455855,"
+"472423,461740,442390,455856,455857,455858,402225,387596,442391,455859,455860,455861,483151,490177,442393,"
+"455864,455863,455862,455867,455866,455865,442392,402219,445384,509916,509900,156576,188758,233582,245403,290830)"
+) where gocnum =1
+) --select * from get_goc_notes;
+--==============================================================================
+", get_smrtdta as"
+( select * from
+(select   /*+ MATERIALIZE*/
+"gd.hsp_account_id,  ROW_NUMBER() over(partition by gd.hsp_account_id order by sede.element_id) as smtnum"
+", case when element_id is not null then 1 else 0 end as  smrtdta"
+from hno_info hi
+inner join smrtdta_elem_data sede on sede.record_id_varchar = hi.note_id and sede.element_id = 'OHS#18907'
+inner join get_discharges gd on hi.pat_enc_csn_id = gd.prim_enc_csn_id
+)  where smtnum = 1
+) --select * from get_smrtdta;
+--==============================================================================
+", get_acp_goc as"
+(
+select
+gd.prim_enc_csn_id
+", gd.hsp_account_id"
+", pat_mrn_id"
+", pat_id"
+", case when ad_lw_scan_date is not null or"
+POA_scan_date is not null or
+LA_POST_scan_date is not null or
+lw_scan_date is not null or
+hc_POA_scan_date is not null then 1 else 0 end as ADLW_YN
+", ad_lw_scan_date"
+", POA_scan_date"
+", LA_POST_scan_date"
+", lw_scan_date"
+", hc_POA_scan_date"
+", adv_care_discuss_during_Enctr"
+", note_type"
+", acp_sl"
+", goc_note"
+", smrtdta"
+from get_discharges gd
+left outer join get_adlw_doc adlw on adlw.hsp_account_id = gd.hsp_account_id
+left outer join get_POA_doc poa on poa.hsp_account_id = gd.hsp_account_id
+left outer join get_lapost_doc lapost on lapost.hsp_account_id = gd.hsp_account_id
+left outer join get_lw_doc lw on lw.hsp_account_id = gd.hsp_account_id
+left outer join get_hcpoa_doc hcpoa on hcpoa.hsp_account_id = gd.hsp_account_id
+left outer join get_adv_care_dis gacd on gacd.hsp_account_id = gd.hsp_account_id
+left outer join get_acp_notes gacp on gacp.hsp_account_id = gd.hsp_account_id
+left outer join get_adv_care_dis_sl gacsl on gacsl.hsp_account_id = gd.hsp_account_id
+left outer join get_goc_notes ggoc on ggoc.hsp_account_id = gd.hsp_account_id
+left outer join get_smrtdta gsmrt on gsmrt.hsp_account_id = gd.hsp_account_id
+) --select * from get_acp_goc;
+--==============================================================================
+", smoc_visit as"
+(
+select
+gd.pat_id
+",gd.index_csn"
+",gd.index_discharge_date"
+",status.name as status"
+",min(pe.contact_date) as smoc_visit_date"
+from get_discharges gd
+inner join pat_enc pe on gd.pat_id = pe.pat_id
+and trunc(pe.contact_date) >= trunc(gd.index_discharge_date)
+and trunc(pe.contact_date) <= trunc(gd.index_discharge_date + INTERVAL '30' DAY)
+and pe.department_id = '301002554' /*SMOC Discharge Clinic*/
+"and pe.enc_type_c in (101 /*Office Visit*/,50 /*Appointment*/)"
+"and pe.appt_status_c in (2 /*Completed*/, 6 /*Arrived*/)"
+inner join clarity_dep cd on pe.department_id = cd.department_id
+left join zc_appt_status status on pe.appt_status_c = status.appt_status_c
+group by
+gd.pat_id
+",gd.index_csn"
+",status.name"
+",pe.enc_type_c"
+",gd.index_discharge_date"
+)
+
+",final as"
+(
+select distinct
+dc.PAT_ID
+",dc.PAT_MRN_ID"
+",dc.PAT_NAME"
+",dc.BIRTH_DATE"
+",dc.DEATH_DATE"
+",dc.LAST_PCP_VISIT"
+",dc.NEXT_PCP_VISIT"
+",dc.INDEX_SOURCE"
+",dc.INDEX_CSN"
+",dc.INDEX_ADMIT_DATE"
+",dc.INDEX_DISCHARGE_DATE"
+",dc.INDEX_DIAGNOSIS"
+",dc.ICD10"
+",dc.INDEX_DRG_TYPE"
+",dc.INDEX_DISCH_DISP"
+",dc.INDEX_PAT_CLASS"
+",dc.INDEX_DEPT"
+",dc.INDEX_LOCATION"
+",dc.INDEX_SA"
+",dc.INDEX_DISCH_PROV"
+",dc.INDEX_FINANCIAL_CLASS"
+",dc.SOURCE"
+",dc.PAT_CSN"
+",dc.ADMIT_DATE"
+",dc.DISCHARGE_DATE"
+",dc.""""PRIMARY DIAGNOSIS NAME"""""
+",dc.DISCHARGE_DISP"
+",dc.""""PATIENT CLASS"""""
+",dc.DEPARTMENT"
+",dc.LOCATION"
+",dc.""""SERVICE AREA"""""
+",dc.ROSTER_NAME"
+",dc.PFA_PROV_NAME"
+",dc.PFA_PROV_CIN"
+",dc.PFA_PROV_REGION"
+",dc.INDEX_PAYOR_NAME"
+",dc.INDEX_PLAN_NAME"
+",dc.FINANCIAL_REGION"
+",dc.PRIM_ENC_CSN_ID"
+",dc.INPATIENT_DATA_ID"
+",dc.HSP_ACCOUNT_ID"
+",dc.TOTAL_SCORE"
+",dc.PAYOR_MEMBER_ID"
+",dc.WORRY_SCORE"
+",tt_prov.PROV_NAME as CASE_MANAGER_NAME"
+
+",prog.msq_first_dttm"
+",prog.msq_first_value"
+",prog.msq_last_dttm"
+",prog.msq_last_value"
+/*
+",gag.ADLW_YN"
+",gag.ad_lw_scan_date"
+",gag.POA_scan_date"
+",gag.LA_POST_scan_date"
+",gag.lw_scan_date"
+",gag.hc_POA_scan_date"
+",gag.adv_care_discuss_during_Enctr"
+",gag.note_type"
+",gag.acp_sl"
+",gag.goc_note"
+",gag.smrtdta"
+*/
+",prog.""""np at home referred"""""
+",prog.""""np at home completed"""""
+",prog.""""np at home elig"""""
+
+",prog.""""tcc_call_outcome"""""
+",prog.""""tcc_contact_date"""""
+
+",prog.""""PC_Procedure"""""
+",prog.""""PC_Provider"""""
+
+",opcm.""""OPCM ELIGIBLE"""""
+",opcm.LAST_ELIG_DATE"
+
+",opcm.""""OPCM REFERRED"""""
+",opcm.""""OPCM Referral Date"""""
+
+",opcm.""""OPCM ENROLLED"""""
+",opcm.""""OPCM Enrollment Date"""""
+
+",opcm.OPCM_BANNER_RULE_ELIG"
+
+",hosfu.""""APPT CSN"""""
+",hosfu.""""APPT STATUS"""""
+",hosfu.""""APPT DATE"""""
+",hosfu.""""APPT MADE ON DATE"""""
+",hosfu.""""ADMIT TO APPT MADE"""""
+",hosfu.""""APPT MADE TO DC"""""
+",hosfu.""""DC TO APPT DATE"""""
+",hosfu.""""CANCLE REASON"""""
+",hosfu.""""VISIT TYPE ID"""""
+",hosfu.""""VISIT TYPE NAME"""""
+",hosfu.""""VISIT TYPE GROUP ID"""""
+",hosfu.""""VISIT TYPE GROUP NAME"""""
+",hosfu.""""APPT DEP ID"""""
+",hosfu.""""APPT CSN 30 DAY"""""
+",hosfu.""""APPT STATUS 30 DAY"""""
+",hosfu.""""APPT DATE 30 DAY"""""
+",hosfu.""""APPT MADE ON DATE 30 DAY"""""
+",hosfu.""""ADMIT TO APPT MADE 30 DAY"""""
+",hosfu.""""APPT MADE TO DC 30 DAY"""""
+",hosfu.""""DC TO APPT DATE 30 DAY"""""
+",hosfu.""""CANCLE REASON 30 DAY"""""
+",hosfu.""""VISIT TYPE ID 30 DAY"""""
+",hosfu.""""VISIT TYPE NAME 30 DAY"""""
+",hosfu.""""VISIT TYPE GROUP ID 30 DAY"""""
+",hosfu.""""VISIT TYPE GROUP NAME 30 DAY"""""
+",hosfu.""""APPT DEP ID 30 DAY"""""
+",hosfu.""""PRE-ADMIT FU CSN"""""
+",hosfu.""""PRE-ADMIT FU STATUS"""""
+",hosfu.""""PRE-ADMIT FU SCHED DATE"""""
+",hosfu.""""PRE-ADMIT FU MADE ON DATE"""""
+",hosfu.""""PRE-ADMIT MADE DATE TO ADMIT"""""
+",hosfu.""""PRE-ADMIT MADE DATE TO DC"""""
+",hosfu.""""DC TO PRE-ADMIT VISIT DATE"""""
+",hosfu.""""PRE-ADMIT CANCEL REASON"""""
+",hosfu.""""PRE-ADMIT VISIT TYPE ID"""""
+",hosfu.""""PRE-ADMIT VISIT TYPE NAME"""""
+",hosfu.""""PRE-ADMIT VISIT TYPE GROUP ID"""""
+",hosfu.""""PRE-ADMIT VISIT TYPE GROUP NAME"""""
+",hosfu.""""PRE-ADMIT DEPARTMENT ID"""""
+
+",hosfu.EXT_VISIT_DATE"
+",hosfu.EXT_DC_TO_APPT"
+
+"--      ,hosfu.""""FU CSN"""""
+"--      ,hosfu.""""FU STATUS"""""
+"--      ,hosfu.""""FU VISIT TYPE NAME"""""
+"--      ,hosfu.""""DC TO FU VISIT DATE"""""
+
+",mai.""""Day 0 Reply"""""
+",mai.""""Day 1 Reply"""""
+",mai.""""Day 2 Reply"""""
+",mai.""""Day 3 Reply"""""
+",mai.""""Day 7 Reply"""""
+",mai.""""Day 9 Reply"""""
+",mai.""""Day 0 Outgoing"""""
+",mai.""""Day 1 Outgoing"""""
+",mai.""""Day 2 Outgoing"""""
+",mai.""""Day 3 Outgoing"""""
+",mai.""""Day 7 Outgoing"""""
+",mai.""""Day 9 Outgoing"""""
+
+",rx.""""TELERX FLAGGED DTTM"""""
+",rx.""""TELERX INITIATED DTTM"""""
+",rx.""""TELERX CHARTING COMPLETE DTTM"""""
+",rx.""""RXMED ONSITE INITIATED DTTM"""""
+",rx.""""RXMED ONSITE CHARTING COMPLETE DTTM"""""
+",rx.""""ED_FLAG"""""
+
+",sv.SMOC_VISIT_DATE"
+",sv.STATUS as SMOC_VISIT_STATUS"
+",EXTRACT(year from dc.DISCHARGE_DATE) AS date_year"
+",pat.patient_zip"
+",pat.patient_ethnic_group"
+",pat.preferred_language"
+",pat.legal_sex"
+",pat.Race"
+",pat.patient_region"
+",pat.fin_class_name"
+",pat.intrptr_needed_yn"
+",pat.gender_identity"
+",pat.sex_assigned_at_birth"
+",'Readmissions' as metric_name"
+from get_discharges dc
+--left join get_acp_goc gag on dc.PAT_ID = gag.PAT_ID and to_char(dc.PRIM_ENC_CSN_ID) = to_char(gag.PRIM_ENC_CSN_ID)
+left join v_readmission_hosfu_mv hosfu on dc.PAT_ID = hosfu.PAT_ID and dc.INDEX_CSN = hosfu.INDEX_CSN
+left join v_readmission_opcm_mv opcm on dc.PAT_ID = opcm.PAT_ID and dc.INDEX_CSN = opcm.INDEX_CSN
+left join v_readmission_prog_mv prog on dc.PAT_ID = prog.PAT_ID and dc.INDEX_CSN = prog.INDEX_CSN
+left join v_readmission_mai_mv mai on dc.PAT_ID = mai.PAT_ID and dc.INDEX_CSN = mai.INDEX_CSN
+left join v_readmission_rx_mv rx on dc.PAT_ID = rx.PAT_ID and dc.INDEX_CSN = rx.INDEX_CSN
+left join smoc_visit sv on dc.PAT_ID = sv.PAT_ID and dc.INDEX_CSN = sv.INDEX_CSN
+left join PREP_PTW_RACE_DIM pat on pat.pat_mrn_id = dc.pat_mrn_id
+left join (
+"select tt_prov.prov_name, tt.pat_enc_csn_id"
+from
+(
+"select tt.pat_enc_csn_id, min(line) as line"
+from hsp_trtmt_team tt
+where tt.trtmnt_team_rel_c = '22'
+group by tt.pat_enc_csn_id
+) tt
+inner join hsp_trtmt_team tt_1 on tt.pat_enc_csn_id = tt_1.pat_enc_csn_id
+and tt.line = tt_1.line
+left join clarity_ser tt_prov on tt_1.prov_id = tt_prov.prov_id
+) tt_prov on to_char(dc.INDEX_CSN) = to_char(tt_prov.PAT_ENC_CSN_ID)
+)
+--select * from final;
+
+select
+"final.*,"
+ptw_goals.goal_value
+
+from final
+left join ptw_goals@nexus  on ptw_goals.year = final.date_year
+--and UPPER(ptw_goals.region_facility) = UPPER(final.region)  --remove
+"and substr(ptw_goals.goal_name,1,length(ptw_goals.goal_name)-7) = final.metric_name"
+"and region_facility = 'OHS'"""
+"""SELECT /*+ MATERIALIZE*/"
+enc.PAT_ENC_CSN_ID
+",enc.PAT_ID"
+",pat.PAT_MRN_ID"
+",CASE WHEN enc.PAT_ENC_CSN_ID IS NOT NULL"
+AND stat.NAME != 'Canceled'
+THEN 1
+ELSE 0
+END                                                   NUM_SLOTS_USED
+",prc.PRC_NAME                                               VISIT_TYPE"
+",enc.PAT_ONLINE_YN                                          VV_SCHED_ONLINE_INITIALLY"
+",encn.APPT_NOTE                                             VV_APPT_NOTES"
+",enc.APPT_MADE_DTTM                                         VV_MADE_DATE"
+",enc.APPT_DTTM                                              VV_APPT_DATE"
+",enc.SAME_DAY_YN                                            VV_SAME_DAY_YN"
+",enc.ROOMED_DTTM                                            VV_ROOMED_DATE"
+"--,ava.SLOT_BEGIN_TIME                                        VV_SLOT_BEGIN_TIME"
+",enc.PROV_ID                                                VV_PROV_ID"
+",enc.APPT_BLOCK_C"
+",blk.NAME                                                   VV_BLOCK_NAME"
+",enc.DEPARTMENT_ID                                          VV_DEPARTMENT_ID"
+",stat.NAME                                                  VV_STATUS"
+",crsn.NAME                                                  VV_CANCEL_REASON"
+",enc.APPT_CANC_DTTM                                         VV_CANCEL_DATE"
+",enc.LATE_CANCEL_YN                                         VV_LATE_CANCEL_YN"
+",enc.CHANGE_CNT                                             VV_CHANGE_COUNT"
+"--,ava.OUTSIDE_TEMPLATE_YN"
+
+
+
+
+FROM
+F_SCHED_APPT enc
+INNER JOIN PATIENT pat ON enc.PAT_ID = pat.PAT_ID
+INNER JOIN CLARITY_PRC prc ON enc.PRC_ID = prc.PRC_ID
+--INNER JOIN CLARITY_SER ser ON enc.PROV_ID = ser.PROV_ID
+LEFT OUTER JOIN PAT_ENC_APPT_NOTES encn ON enc.PAT_ENC_CSN_ID = encn.PAT_ENC_CSN_ID AND encn.APPT_NOTE = 'Scheduled via Digital Medicine Enrollment Site'
+LEFT OUTER JOIN ZC_APPT_STATUS stat ON enc.APPT_STATUS_C = stat.APPT_STATUS_C
+LEFT OUTER JOIN ZC_CANCEL_REASON crsn ON enc.CANCEL_REASON_C = crsn.CANCEL_REASON_C
+LEFT OUTER JOIN CLARITY_EZP ezp ON pat.ZIP = ezp.ZIP_CODE_ID AND pat.STATE_C = ezp.STATE_C AND pat.COUNTY_C = ezp.COUNTY_C AND ezp.LINE = 1
+LEFT OUTER JOIN ZC_STATE state ON pat.STATE_C = state.STATE_C
+LEFT OUTER JOIN ZC_COUNTY cnty ON ezp.COUNTY_C = cnty.COUNTY_C
+LEFT OUTER JOIN ZC_LANGUAGE lang ON pat.LANGUAGE_C = lang.LANGUAGE_C
+LEFT OUTER JOIN ZC_APPT_BLOCK blk ON enc.APPT_BLOCK_C = blk.APPT_BLOCK_C
+
+
+WHERE
+enc.DEPARTMENT_ID = 160199991/*OHS DIGITAL MED*/
+"AND TRUNC(enc.APPT_DTTM) BETWEEN ADD_MONTHS(TRUNC(SYSDATE, 'YYY'), -12) AND TRUNC(SYSDATE)+90"
+--AND ava.PROV_ID = '71290'
+--AND enc.PAT_ENC_CSN_ID = 309274133
+--AND stat.NAME != 'Canceled'
+--AND enc.APPT_BLOCK_C IS NULL
+
+
+ORDER BY
+enc.PAT_ENC_CSN_ID
+",VV_APPT_DATE"""
+"""SELECT /*+ MATERIALIZE*/"
+enc.PAT_ENC_CSN_ID
+",enc.PAT_ID"
+",pat.PAT_MRN_ID"
+",CASE WHEN enc.PAT_ENC_CSN_ID IS NOT NULL"
+AND stat.NAME != 'Canceled'
+THEN 1
+ELSE 0
+END                                                   NUM_SLOTS_USED
+",prc.PRC_NAME                                               VISIT_TYPE"
+",enc.PAT_ONLINE_YN                                          VV_SCHED_ONLINE_INITIALLY"
+",encn.APPT_NOTE                                             VV_APPT_NOTES"
+",enc.APPT_MADE_DTTM                                         VV_MADE_DATE"
+",enc.APPT_DTTM                                              VV_APPT_DATE"
+",enc.SAME_DAY_YN                                            VV_SAME_DAY_YN"
+",enc.ROOMED_DTTM                                            VV_ROOMED_DATE"
+"--,ava.SLOT_BEGIN_TIME                                        VV_SLOT_BEGIN_TIME"
+",enc.PROV_ID                                                VV_PROV_ID"
+",enc.APPT_BLOCK_C"
+",blk.NAME                                                   VV_BLOCK_NAME"
+",enc.DEPARTMENT_ID                                          VV_DEPARTMENT_ID"
+",stat.NAME                                                  VV_STATUS"
+",crsn.NAME                                                  VV_CANCEL_REASON"
+",enc.APPT_CANC_DTTM                                         VV_CANCEL_DATE"
+",enc.LATE_CANCEL_YN                                         VV_LATE_CANCEL_YN"
+",enc.CHANGE_CNT                                             VV_CHANGE_COUNT"
+"--,ava.OUTSIDE_TEMPLATE_YN"
+
+
+
+
+FROM
+F_SCHED_APPT enc
+INNER JOIN PATIENT pat ON enc.PAT_ID = pat.PAT_ID
+INNER JOIN CLARITY_PRC prc ON enc.PRC_ID = prc.PRC_ID
+--INNER JOIN CLARITY_SER ser ON enc.PROV_ID = ser.PROV_ID
+LEFT OUTER JOIN PAT_ENC_APPT_NOTES encn ON enc.PAT_ENC_CSN_ID = encn.PAT_ENC_CSN_ID AND encn.APPT_NOTE = 'Scheduled via Digital Medicine Enrollment Site'
+LEFT OUTER JOIN ZC_APPT_STATUS stat ON enc.APPT_STATUS_C = stat.APPT_STATUS_C
+LEFT OUTER JOIN ZC_CANCEL_REASON crsn ON enc.CANCEL_REASON_C = crsn.CANCEL_REASON_C
+LEFT OUTER JOIN CLARITY_EZP ezp ON pat.ZIP = ezp.ZIP_CODE_ID AND pat.STATE_C = ezp.STATE_C AND pat.COUNTY_C = ezp.COUNTY_C AND ezp.LINE = 1
+LEFT OUTER JOIN ZC_STATE state ON pat.STATE_C = state.STATE_C
+LEFT OUTER JOIN ZC_COUNTY cnty ON ezp.COUNTY_C = cnty.COUNTY_C
+LEFT OUTER JOIN ZC_LANGUAGE lang ON pat.LANGUAGE_C = lang.LANGUAGE_C
+LEFT OUTER JOIN ZC_APPT_BLOCK blk ON enc.APPT_BLOCK_C = blk.APPT_BLOCK_C
+
+
+WHERE
+enc.DEPARTMENT_ID = 160199991/*OHS DIGITAL MED*/
+"AND TRUNC(enc.APPT_DTTM) BETWEEN ADD_MONTHS(TRUNC(SYSDATE, 'YYY'), -12) AND TRUNC(SYSDATE)+90"
+--AND ava.PROV_ID = '71290'
+--AND enc.PAT_ENC_CSN_ID = 309274133
+--AND stat.NAME != 'Canceled'
+--AND enc.APPT_BLOCK_C IS NULL
+
+
+ORDER BY
+enc.PAT_ENC_CSN_ID
+",VV_APPT_DATE"""
+"""SELECT  [ID]"
+"--,[MetricDescID]"
+",[MetricDesc]"
+",[Year]"
+",[Type]"
+",[DeptID]"
+",[DeptDesc]"
+",[January]"
+",[February]"
+",[March]"
+",[April]"
+",[May]"
+",[June]"
+",[July]"
+",[August]"
+",[September]"
+",[October]"
+",[November]"
+",[December]"
+",[COE]"
+FROM [ogm_contracts].[dbo].[VTableauMOR2]
+WHERE
+--[ogm_contracts].[dbo].[VTableauMOR2].[MetricDesc] Is Not Null AND
+[ogm_contracts].[dbo].[VTableauMOR2].[Year]>=2021
+--AND [ogm_contracts].[dbo].[VTableauMOR2].[MetricDesc] = '# of Clinical Trials (Total)'
+"--AND [ogm_contracts].[dbo].[VTableauMOR2].[DeptDesc] = 'BIOBANK'"""
+"""select"
+"frz.run_date ,"
+"frz.personId ,"
+"frz.memberId ,"
+"frz.memberNo ,"
+"frz.name ,"
+"frz.dob ,"
+"pd.mrn ,"
+case when frz.planPayer = 'OHSOEPBCBSLA' then 'Ochsner Employee Plan'
+"		when frz.planPayer = 'OHSP4PElig' then 'BCBS P4P'"
+"		when frz.planPayer = 'OHSPHN' then 'Peoples Health Network'"
+"		when frz.planPayer = 'BlueConnectSTP Comm' then 'St Tammany Parish Sheriffs Office'"
+"		when frz.planPayer = 'BlueConnect Comm' then 'BCBS Blue Connect'"
+"		when frz.planPayer = 'BlueAdvantage MA' then 'BCBS Blue Advantage'"
+"		when frz.planpayer = 'Humana MA' and frz.planproduct like '%GLOBAL%' then 'Humana MA'"
+"		when frz.planpayer = 'Humana MA' then 'Humana Total Care Advantage'"
+"		else frz.planPayer end as planPayer,"
+"frz.planProduct ,	"
+"pd.race as race ,"
+"pd.ethnicity as ethnicity ,"
+"pd.sex ,"
+"pd.zip as zip ,"
+"pd.address1 as address1 ,"
+"pd.address2 as address2 ,"
+"pd.city as city ,"
+"pd.state as state ,"
+"pd.phone as phone ,"
+"pd.deathDate ,"
+"pd.activeInd ,"
+"frz.pcpNPI ,"
+"frz.pcpName ,"
+"frz.pcpGrouper1 as cfa_region ,"
+"frz.pcpgrouper2 as cfa_group_2 ,"
+"frz.epic_pcp_npi ,"
+"frz.epic_pcp_name ,"
+"frz.epic_pcp_group1 ,"
+"frz.epic_pcp_group2 ,"
+"frz.family_docs_pcp_npi ,"
+"frz.family_docs_pcp_name ,"
+"frz.family_docs_pcp_group1 ,"
+"frz.family_docs_pcp_group2 ,"
+"frz.morgan_green_pcp_npi ,"
+"frz.morgan_green_pcp_name ,"
+"frz.morgan_green_pcp_group1 ,"
+"frz.morgan_green_pcp_group2 ,"
+"frz.poc_pcp_npi ,"
+"frz.poc_pcp_name ,"
+"frz.poc_pcp_group1 ,"
+frz.poc_pcp_group2
+from
+(
+select
+"	distinct"
+"	personid ,"
+"	memberid ,"
+"	memberno ,"
+"	name ,"
+"	dob ,"
+"	planPayer ,"
+"	planProduct ,"
+"	run_date ,"
+"	pcpnpi ,"
+"	pcpname ,"
+"	pcpGrouper1 ,"
+"	pcpGrouper2 ,"
+"	fr.clnep_pcpNPI as epic_pcp_npi ,"
+"	fr.clnep_pcpName as epic_pcp_name ,"
+"	fr.clnep_pcpGrouper as epic_pcp_group1 ,"
+"	fr.clnep_pcpgrouper2 as epic_pcp_group2 ,"
+"	fr.clnfd_pcpNPI as family_docs_pcp_npi ,"
+"	fr.clnfd_pcpName as family_docs_pcp_name ,"
+"	fr.clnfd_pcpGrouper as family_docs_pcp_group1 ,"
+"	fr.clnfd_pcpgrouper2 as family_docs_pcp_group2 ,"
+"	fr.clnmcg_pcpNPI as morgan_green_pcp_npi ,"
+"	fr.clnmcg_pcpName as morgan_green_pcp_name ,"
+"	fr.clnmcg_pcpGrouper as morgan_green_pcp_group1 ,"
+"	fr.clnmcg_pcpgrouper2 as morgan_green_pcp_group2 ,"
+"	fr.ed_pcpNPI as poc_pcp_npi ,"
+"	fr.ed_pcpName as poc_pcp_name ,"
+"	fr.ed_pcpGrouper as poc_pcp_group1 ,"
+"	fr.ed_pcpgrouper2 as poc_pcp_group2"
+"	"
+"	from"
+"	[Arcadia_Historical].dbo.frzn_attribution  fr"
+"	where"
+"		fr.startDate = (select max(startdate) from [Arcadia_Historical].dbo.frzn_attribution fr2"
+"							where  fr.planPayer = fr2.planPayer and fr.run_date = fr2.run_date)"
+
+"	"
+"	) frz"
+"	left join [Arcadia_Historical].dbo.v_personDemographics pd on frz.personId = pd.personID and pd.process_run_date = (select max(process_run_datE) from [Arcadia_Historical].dbo.v_personDemographics)"
+
+where
+
+"frz.planPayer <> 'OHSOEPBCBSSC'"""
+"""WITH  providers as ("
+select ser.prov_id
+", ser.prov_name"
+", ser.prov_type"
+"--, ser2.npi"
+", emp.EPIC_EMP_ID"
+", emp.system_login"
+from clarity_ser ser
+--left join clarity_ser_2  ser2 on ser2.prov_id = ser.prov_id
+left outer join clarity_emp emp on ser.prov_id = emp.prov_id
+"where ser.prov_type in ('Anesthesiologist','Nurse Anesthetist')"
+AND emp.EPIC_EMP_ID is NOT null
+-- and ser.prov_id in ('1000707')
+)
+--------------------------------------------------------------------------------
+", empsched as --takes all schedules that are finalized"
+( select *
+from
+(
+select /*+ materialize */ distinct
+"row_number() over (partition by emp.empid, emp.slotdate, emp.assignstructureid order by emp.modifieddate desc) rn,  --take latest schedule per provider per day based off modified date"
+"emp.empid,"
+"emp.id,"
+"emp.slotdate,"
+"emp.modifieddate,"
+"emp.modify_date,"
+"emp.snapshotid,"
+"emp.assignstructureid,"
+"emp.starttime,"
+"emp.stoptime,"
+"emp.schedid,"
+"emp.status,"
+"emp.rulename,"
+"emp.ismapped,"
+"lbs.ispublic,"
+"lbs.final,"
+"lbs.DELETED,"
+"lbs.SCHEDULENAME,"
+"lbs.SCHEDTYPENAME,"
+"lbs.department,"
+"'NA' as changetypelogged,"
+'NA' AS assignmentname
+from
+analytics.lb_empscheduled_v2@nexus                emp
+"inner join analytics.lb_schedules_v2@nexus        lbs  on lbs.schedid = emp.schedid and lbs.snapshotid = emp.snapshotid and lbs.ispublic = 1 and lbs.final = 1  --ignore all data where the schedid referenced in the schedules table field """"ispublic"""" is not 1. this indicates schedule is finalized."
+left  join analytics.lb_schedulechangelogs@nexus  scl  on scl.lb_rowid = emp.id
+where scl.lb_rowid is null
+--and emp.empid in ('204132')
+and slotdate >= '2024-01-01'
+)
+where rn = 1
+)
+--SELECT * FROM empsched
+--------------------------------------------------------------------------------
+
+", changelogs2 as --looks at the schedule change logs and removes deleted shifts"
+( select *
+from
+(
+select
+"row_number() over (partition by empid,lb_rowid,lb_timestamp order by snapshotid desc) as rn,"
+"empid,"
+"lb_rowid,"
+"changetypelogged,"
+"assignmentname,"
+"assignmentid,"
+"snapshotid,"
+lb_timestamp
+from
+analytics.lb_schedulechangelogs@nexus s1
+where s1.id =(select max(id) from analytics.lb_schedulechangelogs@nexus s2 where s1.lb_rowid=s2.lb_rowid)
+--
+) where rn = 1
+and
+"changetypelogged not in ('Replace - Delete - A','Deleted','Delete - Blocked','Delete - Canceled','Replace - Delete - Approved','Delete - Approved' )"
+--and lb_rowid='5004978'
+)
+--select * from changelogs2 ;
+--------------------------------------------------------------------------------
+
+",empsched2 as --takes all schedules that are finalized in addition to those that are not 'deleted'"
+(
+select
+*
+from
+(
+select /*+ materialize */ distinct
+"row_number() over (partition by emp.empid, emp.slotdate, emp.assignstructureid order by emp.modifieddate desc) rn,  --take latest schedule per provider per day based off modified date"
+"emp.empid,"
+"emp.id,"
+"emp.slotdate,"
+"emp.modifieddate,"
+"emp.modify_date,"
+"emp.snapshotid,"
+"emp.assignstructureid,"
+"emp.starttime,"
+"emp.stoptime,"
+"emp.schedid,"
+"emp.rulename,"
+"emp.ismapped,"
+"lbs.ispublic,"
+"lbs.final,"
+"lbs.DELETED,"
+"lbs.SCHEDULENAME,"
+"lbs.SCHEDTYPENAME,"
+"lbs.department,"
+"scl.lb_rowid,"
+"scl.changetypelogged,"
+scl.assignmentname
+from
+analytics.lb_empscheduled_v2@nexus          emp
+"inner join analytics.lb_schedules_v2@nexus  lbs  on lbs.schedid = emp.schedid and lbs.snapshotid = emp.snapshotid and lbs.ispublic = 1 and lbs.final = 1--ignore all data where the schedid referenced in the schedules table field """"ispublic"""" is not 1. this indicates schedule is finalized."
+"inner join changelogs2    scl  on scl.lb_rowid = emp.id and scl.empid=emp.empid --and scl.changetypelogged not in ('Replace - Delete - A','Deleted','Delete - Blocked','Delete - Canceled','Replace - Delete - Approved','Delete - Approved' ) --and emp.snapshotid=scl.snapshotid"
+where
+scl.lb_rowid is not null
+-- and emp.empid in ('201932') --run for these empids
+and slotdate >= '2024-01-01'
+)
+where
+rn = 1
+)
+--select * from empsched2 where empid = '201932';
+
+--------------------------------------------------------------------------------
+--personnel.uniqueid -> providers.provider_adid  --link from nexuslb to neuxsproviders
+--providers.provider_number -> clarity_ser.prov_id --link from nexus to clarity
+
+", personnel as ("
+"	select"
+"p.id as empid,"
+"edp.name AS provider_name,"
+"edp.provider_number,"
+"edp.provider_id AS prov_id,"
+"edp.npi,"
+edp.provider_type AS prov_type
+from analytics.lb_personnel_v2@nexus p
+inner join  analytics.providers@nexus edp on edp.employee_number  = p.uniqueid
+"where edp.provider_type in ('Anesthesiologist','Nurse Anesthetist')"
+)
+--select * from personnel;
+--------------------------------------------------------------------------------
+
+
+",assignments as"
+(
+select /*+ materialize */ distinct -- distinct not needed when pointless joins commented out
+"a.id,"
+"a.snapshotid,"
+"a.category_id,"
+"a.assignment,"
+"ac.name as category,"
+"ac.description as category_name,"
+"d.deptname,"
+d.deptid
+from
+analytics.lb_assignments_v2@nexus a
+left  join analytics.lb_assignmentcategories@nexus  ac  on ac.snapshotid = a.snapshotid and ac.id = a.category_id
+left  join analytics.lb_department@nexus d   on  d.snapshotid  = a.snapshotid and d.deptid = a.department
+--where a.assignment like '%OSM Anesthesia%'
+
+where a.assignment not like '%Call%'
+and a.assignment not like '2C'
+and a.assignment not like '2GI'
+and a.assignment not like '4GI'
+and a.assignment not like 'WANT%'
+"and a.assignment not like '""""Admin - AM'"
+and a.assignment not like 'Admin - PM'
+and a.assignment not like 'Academic Day - MD'
+and a.assignment not like 'Admin. Day - MD'
+and a.assignment not like 'CRNA Admin'
+and a.assignment not like 'CRNA No Late Shifts'
+and a.assignment not like 'CRNA No Night Shifts'
+and a.assignment not like 'CRNA Off'
+and a.assignment not like 'CRNA Sick'
+and a.assignment not like 'CRNA VAC PEND'
+and a.assignment not like 'Holiday Off'
+and a.assignment not like 'KNMH CRNA GPT 4 hrs'
+and a.assignment not like 'KNMH Holiday CRNA'
+and a.assignment not like 'KNMH MD CME'
+and a.assignment not like 'KNMH MD Vac'
+and a.assignment not like 'KNMH MD Vac P1'
+and a.assignment not like 'KNMH No Late'
+and a.assignment not like 'KNMH No WKND'
+and a.assignment not like 'MD Ungranted Vac'
+and a.assignment not like 'NOMH MD - Lecture'
+and a.assignment not like 'NOMH MD No Late'
+and a.assignment not like 'NOMH MD No Wknd'
+and a.assignment not like 'NOMH Night Float'
+and a.assignment not like 'NOMH Sick MD'
+and a.assignment not like 'NOMH Vac MD'
+and a.assignment not like 'OCVH Admin CRNA'
+and a.assignment not like 'OCVH Holiday CRNA'
+and a.assignment not like 'OMC 7A-3P CRNA FMLA'
+and a.assignment not like 'OMC 7A-3P CRNA Orient'
+and a.assignment not like 'OMC CRNA Jury Duty'
+and a.assignment not like 'OMC CRNA Post Night'
+and a.assignment not like 'OMC Holiday CRNA'
+and a.assignment not like 'RES BAPH OB Swing'
+and a.assignment not like 'RES Baptist - Swing Anes'
+and a.assignment not like 'SCPH - MD'
+and a.assignment not like 'WBMH'
+and a.assignment not like 'WBMH MD Vacation/WLD'
+and a.assignment not like '%KNMH Holiday'
+and a.assignment not like 'SCPH - MD'
+)
+
+--------------------------------------------------------------------------------
+
+",emp1_final as"
+(
+select  distinct
+"emp.rn,"
+"emp.empid,"
+"p.provider_name,"
+"p.provider_number,"
+"p.prov_id,"
+"p.prov_type,"
+"emp.assignstructureid,"
+"emp.schedid,"
+"emp.slotdate,"
+"to_date(to_char(emp.slotdate), 'yyyy-mm-dd') as slot_date,"
+"case when emp.starttime is null then st.starttime else emp.starttime end as starttime,"
+case when emp.stoptime is null then st.stoptime else emp.stoptime end as stoptime
+", emp.schedulename"
+", emp.schedtypename"
+", emp.department"
+", emp.changetypelogged"
+", emp.assignmentname"
+", a.assignment"
+", a. id as assignmentid"
+", a.category"
+", a.category_name"
+", a.deptname"
+", a.deptid"
+from
+empsched emp
+inner join analytics.lb_assignmentstructure_v2@nexus  st   on st.snapshotid   = emp.snapshotid and st.id         = emp.assignstructureid
+inner join assignments  a on st.assignmentid = a.id and st.snapshotid = a.snapshotid
+left join personnel p  on p.empid  = emp.empid
+--     where emp.empid in ('20578')
+order by
+slotdate asc
+)
+--select * from emp1_final;
+--------------------------------------------------------------------------------
+
+",emp2_final as"
+(
+select  distinct
+emp2.rn
+", emp2.empid"
+", p.provider_name"
+", p.provider_number"
+", p.prov_id"
+", p.prov_type"
+", emp2.assignstructureid"
+", emp2.schedid"
+", emp2.slotdate"
+", to_date(to_char(emp2.slotdate), 'yyyy-mm-dd') as slot_date"
+", case when emp2.starttime is null then st.starttime else emp2.starttime end as starttime"
+", case when emp2.stoptime  is null then st.stoptime  else emp2.stoptime  end as stoptime"
+", emp2.schedulename"
+", emp2.schedtypename"
+", emp2.department"
+", emp2.changetypelogged"
+", emp2.assignmentname"
+", a.assignment"
+", a. id as assignmentid"
+", a.category"
+", a.category_name"
+", a.deptname"
+", a.deptid"
+from
+empsched2 emp2
+inner join analytics.lb_assignmentstructure_v2@nexus  st on st.snapshotid   = emp2.snapshotid and st.id         = emp2.assignstructureid
+inner join assignments a   on st.assignmentid = a.id and st.snapshotid = a.snapshotid
+left join personnel p on p.empid = emp2.empid
+order by
+emp2.slotdate asc
+"-- rn asc , modifieddate desc --, snapshotid desc;"
+)
+
+--------------------------------------------------------------------------------
+
+", lb_summary as ("
+select * from emp1_final
+union
+select * from emp2_final )
+
+
+", light  as ("
+SELECT distinct
+lbs.*
+", to_date((lbs.slotdate ||' '|| lbs.stoptime), 'yyyy-mm-dd hh24:mi:ss') stopped"
+", to_date((lbs.slotdate ||' '|| lbs.starttime), 'yyyy-mm-dd hh24:mi:ss') started"
+FROM lb_summary lbs
+)
+
+"--select * from light where prov_id in ('79206', '96988') and slot_date >= '2024-04-01' ;"
+--------------------------------------------------------------------------------
+", surg AS ("
+SELECT distinct ol.SURGERY_DATE
+", ol.log_id"
+", ol.TOTAL_TIME_NEEDED"
+", ser.PROV_TYPE       as staff_type"
+", ser.prov_name       as staff_name"
+", ser.prov_id"
+", loc.loc_name"
+",  tim_start.timing_event_dttm  AS ana_start"
+", tim_end.timing_event_dttm  as ana_stop"
+from or_log ol
+inner join OR_LOG_ALL_STAFF ols on ols.log_id = ol.log_id
+inner join or_log_timing_events tim_start on tim_start.log_id = ol.log_id and tim_start.timing_event_c in ('500')
+inner join or_log_timing_events tim_end on tim_end.log_id = ol.log_id and tim_end.timing_event_c in ('1600')
+left join clarity_ser ser on ser.prov_id = ols.staff_id
+left join ZC_OR_STAFF_TYPE st on st.SURG_STAFF_REQ_C = ols.STAFF_TYPE_C
+left join clarity_loc loc on ol.loc_id = loc.loc_id
+where 1=1
+and ol.SURGERY_DATE >= '01-JAN-24'
+"and ser.prov_type in ('Anesthesiologist','Nurse Anesthetist')"
+--and ol.log_id = '7243565'
+)
+
+------------------------------------------------------------------------
+SELECT surg.SURGERY_DATE
+", surg.log_id"
+", surg.TOTAL_TIME_NEEDED"
+", surg.staff_type"
+", surg.staff_name"
+", surg.loc_name"
+", lit.provider_name"
+", lit.provider_number"
+", lit.prov_id"
+", lit.slot_date"
+", lit.assignment"
+", lit.started"
+", lit.stopped"
+", surg.ana_start"
+", surg.ana_stop"
+"--       , lbs.id"
+"--   , round((lbs.stoptime - lbs.starttime) * 24,1) as Shift"
+FROM light lit
+LEFT JOIN  surg  ON lit.provider_number = surg.prov_id
+and lit.slot_date = surg.SURGERY_DATE
+WHERE surg.prov_id is not null
+--and lit.prov_id in ('1000707')
+
+"order by surg.SURGERY_DATE, lit.prov_id"""
+"""Select """"DATASOURCE ID"""", """"PUBLISHED DATASOURCE ID"""", """"PUBLISHED DATASOURCE CONNECTION ID"""", """"PARENT WORKBOOK ID"""", """"DATASOURCE PROJECT"""""
+"""""DATASOURCE CREATED AT"""", """"DATASOURCE UPDATED AT"""", """"DATASOURCE DB CLASS"""", """"IS EMBEDDED IN WORKBOOK"""", """"DATASOURCE DB CLASS_UNDERLYING"""", """"DATASOURCE SERVER"""""
+from ANALYTICS_APP.TABLEAU_DATASOURCES ds
+"where """"PARENT WORKBOOK ID"""" is not null -- Only Datasources"
+"--- PUBLISHED DATASOURCE CONNECTION ID join to DATASOURCE ID"""
+"""WITH HBR AS("
+
+select
+"HBR.BILL_RESULT_ID,"
+"HBR.BILL_RESULT_SOURCE_ID,"
+"HBR.BILL_RESULT_TYPE_ID,"
+"HBR.PAYOR_ID,"
+"HBR.HOSP_ENC_ID,"
+CASE
+WHEN ENC.BILL_AREA_ID = 3 THEN 10
+WHEN ENC.BILL_AREA_ID = 6 THEN 740
+WHEN ENC.BILL_AREA_ID = 8 THEN 870
+WHEN ENC.BILL_AREA_ID = 10 THEN 600
+WHEN ENC.BILL_AREA_ID = 20 THEN 9700
+WHEN ENC.BILL_AREA_ID = 22 THEN 9600
+WHEN ENC.BILL_AREA_ID = 25 THEN 9004
+"ELSE ENC.BILL_AREA_ID END AS SERVICE_AREA_CODE,"
+"HBR.LIABILITY_BUCKET_ID,"
+"HBR.CREATE_DATE_ID,"
+"HBR.RECEIVE_DATE_ID,"
+"HBR.COMP_VOID_DATE_ID,"
+"HBR.REOPEN_DATE_ID,"
+"HBR.UPDATE_DATE_ID,"
+"HBR.INVOICE_NUMBER,"
+"HBR.EXTERNAL_REASON_CODE,"
+"HBR.PAYMENT_SOURCE_ID,"
+"HBR.CREATE_DATE,"
+"HBR.RECEIVE_DATE,"
+"HBR.COMP_VOID_DATE,"
+"HBR.REOPEN_DATE,"
+HBR.UPDATE_DATE
+
+from
+ANALYTICS.HOSP_BILLING_RESULTS HBR
+LEFT JOIN ANALYTICS.HOSP_ENCOUNTER_FACT ENC ON HBR.HOSP_ENC_ID = ENC.HOSP_ENC_ID
+LEFT JOIN ANALYTICS.BILL_AREA ON ANALYTICS.BILL_AREA.BILL_AREA_ID = ENC.BILL_AREA_ID
+
+
+WHERE
+"ENC.BILL_AREA_ID IN (3,6,8,10,20,22,25)"
+AND
+"HBR.CREATE_DATE >= TO_DATE('20230101', 'yyyymmdd') --AND LAST_DAY(ADD_MONTHS(SYSDATE, - 1))"
+
+
+"),"
+
+MY_FINAL AS
+(
+SELECT
+
+HBR.SERVICE_AREA_CODE EDW_SERVICE_AREA_CODE
+",TRUNC(HBR.CREATE_DATE) EDW_CREATE_DATE"
+",COUNT(*) EDW_HB_REMIT_COUNT"
+FROM
+HBR
+GROUP BY
+HBR.SERVICE_AREA_CODE
+",HBR.CREATE_DATE"
+)
+
+SELECT * FROM MY_FINAL
+
+ORDER BY
+"2,1"""
+"""WITH HBR AS("
+
+select
+"HBR.BILL_RESULT_ID,"
+"HBR.BILL_RESULT_SOURCE_ID,"
+"HBR.BILL_RESULT_TYPE_ID,"
+"HBR.PAYOR_ID,"
+"HBR.HOSP_ENC_ID,"
+CASE
+WHEN ENC.BILL_AREA_ID = 3 THEN 10
+WHEN ENC.BILL_AREA_ID = 6 THEN 740
+WHEN ENC.BILL_AREA_ID = 8 THEN 870
+WHEN ENC.BILL_AREA_ID = 10 THEN 600
+WHEN ENC.BILL_AREA_ID = 20 THEN 9700
+WHEN ENC.BILL_AREA_ID = 22 THEN 9600
+WHEN ENC.BILL_AREA_ID = 25 THEN 9004
+"ELSE ENC.BILL_AREA_ID END AS SERVICE_AREA_CODE,"
+"HBR.LIABILITY_BUCKET_ID,"
+"HBR.CREATE_DATE_ID,"
+"HBR.RECEIVE_DATE_ID,"
+"HBR.COMP_VOID_DATE_ID,"
+"HBR.REOPEN_DATE_ID,"
+"HBR.UPDATE_DATE_ID,"
+"HBR.INVOICE_NUMBER,"
+"HBR.EXTERNAL_REASON_CODE,"
+"HBR.PAYMENT_SOURCE_ID,"
+"HBR.CREATE_DATE,"
+"HBR.RECEIVE_DATE,"
+"HBR.COMP_VOID_DATE,"
+"HBR.REOPEN_DATE,"
+HBR.UPDATE_DATE
+
+from
+ANALYTICS.HOSP_BILLING_RESULTS HBR
+LEFT JOIN ANALYTICS.HOSP_ENCOUNTER_FACT ENC ON HBR.HOSP_ENC_ID = ENC.HOSP_ENC_ID
+LEFT JOIN ANALYTICS.BILL_AREA ON ANALYTICS.BILL_AREA.BILL_AREA_ID = ENC.BILL_AREA_ID
+
+
+WHERE
+"ENC.BILL_AREA_ID IN (3,6,8,10,20,22,25)"
+AND
+"HBR.CREATE_DATE >= TO_DATE('20230101', 'yyyymmdd') --AND LAST_DAY(ADD_MONTHS(SYSDATE, - 1))"
+
+
+"),"
+
+MY_FINAL AS
+(
+SELECT
+
+HBR.SERVICE_AREA_CODE EDW_SERVICE_AREA_CODE
+",TRUNC(HBR.CREATE_DATE) EDW_CREATE_DATE"
+",COUNT(*) EDW_HB_REMIT_COUNT"
+FROM
+HBR
+GROUP BY
+HBR.SERVICE_AREA_CODE
+",HBR.CREATE_DATE"
+)
+
+SELECT * FROM MY_FINAL
+
+ORDER BY
+"2,1"""
+"""/* + NO_PARALLEL */"
+select distinct
+ser.prov_id -- This is the ID in Vizient
+",ser.prov_name"
+"from clarity_ser ser"""
+"""--sql server"
+
+select date_value
+", date_Grain"
+", Region"
+", DEPT_ABBREVIATION"
+", Service_Desc --eg:medical practice/HCAHPS/Telemed"
+", Metric_Type --eg:survey domain/survey question"
+", SurveyName --eg:MD|O4/TM|O4"
+", Abbreviated_Question --eg:likelihood/"
+", Rank"
+", Goal_Rank_Target"
+", TotalSurveys"
+", AdjSample_Included --this will be limited in tableau using new calc field"
+from [CDW_Stage].[OHS].[SurveyPGRankFinal]
+WHERE service_desc = 'Medical Practice'
+"and (Region in ('System','RUSH Region','North Louisiana','Ochsner Community Health') OR (Region = 'OLG OALH' and Date_value < '2024-01-01'))"
+and DEPT_ABBREVIATION <> 'All' -- This will give a list of all Departments
+and Date_value >= '2023-01-01' -- Select data Range
+
+and Attending_Provider = 'All'
+and REGISTRAR_NAME  = 'All'
+and Financial_Class = 'All'
+and HourlyRounding = 'All'
+and SERVICE_LINE = 'All'
+and Age_Buckets = 'All'
+"and """"15PROV"""" = 'All'"
+and SERVICE_LINE_SUMMARY = 'All'
+and PAT_VISIT_TYPE = 'All'
+and (Midlevel_Provider is null or Midlevel_Provider = 'All')
+
+--and Date_Grain = 'Year'
+"--and AdjSample_Included = 'Included' --this will be limited in tableau using new calc field"""
+"""/*Create Table ALL_eAWV_TEMP as*/"
+WITH DATES AS (
+SELECT DISTINCT
+"TO_DATE('01/01/2017', 'mm/dd/yyyy') AS START_DATE"
+", TO_DATE('12/31/2022', 'mm/dd/yyyy') AS END_DATE"
+FROM
+ZC_YES_NO
+"), G_CODES AS ("
+SELECT
+PAT_ENC_CSN_ID
+", SUBSTR("
+"LISTAGG(PROC_CODE, '; ') WITHIN GROUP("
+ORDER BY
+PROC_CODE
+)
+", 1, 20) AS G_CODES"
+FROM
+(
+SELECT DISTINCT
+UCL.EPT_CSN AS PAT_ENC_CSN_ID
+", EAP.PROC_CODE"
+FROM
+CLARITY_UCL   UCL
+INNER JOIN CLARITY_EAP   EAP ON UCL.PROCEDURE_ID = EAP.PROC_ID
+INNER JOIN DATES ON UCL.SERVICE_DATE_DT BETWEEN DATES.START_DATE AND DATES.END_DATE
+WHERE
+1 = 1
+AND EAP.PROC_CODE IN (
+'G0402'
+", 'G0438'"
+", 'G0439'"
+)
+)
+GROUP BY
+PAT_ENC_CSN_ID
+"), APPTS AS ("
+SELECT DISTINCT
+PE.PAT_ENC_CSN_ID
+FROM
+PAT_ENC PE
+INNER JOIN DATES ON PE.CONTACT_DATE BETWEEN DATES.START_DATE AND DATES.END_DATE
+WHERE
+1 = 1
+AND PE.APPT_PRC_ID IN (
+'754'
+", '756'"
+", '2695'"
+", '596'"
+)
+"), COMBO AS ("
+SELECT DISTINCT
+PAT_ENC_CSN_ID
+FROM
+G_CODES
+UNION
+SELECT DISTINCT
+PAT_ENC_CSN_ID
+FROM
+APPTS
+)
+
+/*ohn_analytics.awv_weekly_update*/
+", AWV AS ("
+SELECT DISTINCT
+COUNT(DISTINCT C.PAT_ENC_CSN_ID) OVER() AS ENC_CNT
+", COUNT(DISTINCT P.PAT_ID) OVER() AS PAT_CNT"
+", P.PAT_ID"
+", TRIM(P.PAT_MRN_ID) AS MRN"
+", P.PAT_NAME                   AS PATIENT"
+", P.BIRTH_DATE                 AS DOB"
+", C.PAT_ENC_CSN_ID"
+", PE.CONTACT_DATE"
+", ZAS.TITLE                    AS APPT_STATUS_NAME"
+/*
+", DEP.DEPARTMENT_NAME"
+|| ' ['
+|| PE.DEPARTMENT_ID
+|| ']' AS DEPARTMENT
+", PE.DEPARTMENT_ID"
+", DEP.DEPARTMENT_NAME"
+", ZC.TITLE"
+|| ' ['
+|| DEP.CENTER_C
+|| ']' AS CENTER
+", COALESCE(LTIN.IRS_NUM, STIN.IRS_NUM) AS TIN"
+", DEP.CENTER_C                 AS CENTER_ID"
+", ZC.TITLE                     AS CENTER_NAME"
+", PE.APPT_STATUS_C             AS APPT_STATUS_ID"
+", ZAS.TITLE                    AS APPT_STATUS_NAME"
+", PE.ENC_CLOSED_YN"
+", PE.APPT_PRC_ID               AS APPT_TYPE_ID"
+", PRC.PRC_NAME                 AS APPT_TYPE_NAME"
+", CASE"
+WHEN PE.APPT_PRC_ID IN (
+'754'
+", '756'"
+", '2695'"
+", '596'"
+) THEN
+1
+ELSE
+NULL
+END AS AWV_VISIT_TYPE_FLAG
+", ESER.PROV_NAME"
+|| ' ['
+|| PE.VISIT_PROV_ID
+|| ']' AS ENCOUNTER_PROVIDER
+", PE.VISIT_PROV_ID             AS ENC_PROV_ID"
+", ESER.PROV_NAME               AS ENC_PROV_NAME"
+", PE.COVERAGE_ID"
+", PROV.SOURCE_SYSTEM_ID        AS BILLING_PROV_ID"
+", PROV.PRIMARY_PROVIDER_NAME   AS BILLING_PROV_NAME"
+", COV.PAYOR_ID"
+", EPM.PAYOR_NAME"
+", COV.PLAN_ID"
+", EPP.BENEFIT_PLAN_NAME        AS PLAN_NAME"
+", PED.LINE                     AS DX_LINE"
+", EDG.DX_NAME                  AS VISIT_DX"
+", EDG.CURRENT_ICD10_LIST       AS DX_CODES_ICD10"
+", G.G_CODES"
+", CASE"
+WHEN G.G_CODES LIKE '%G0402%' THEN
+1
+ELSE
+NULL
+END AS G0402_FLAG
+", CASE"
+WHEN G.G_CODES LIKE '%G0438%' THEN
+1
+ELSE
+NULL
+END AS G0438_FLAG
+", CASE"
+WHEN G.G_CODES LIKE '%G0439%' THEN
+1
+ELSE
+NULL
+END AS G0439_FLAG
+*/
+", 'WEEK ' || TO_CHAR(DD.WEEK_NUMBER) AS WEEK_NUMBER"
+", SYSDATE                      AS REFRESH_DATE"
+FROM
+COMBO                         C
+INNER JOIN PAT_ENC                       PE ON C.PAT_ENC_CSN_ID = PE.PAT_ENC_CSN_ID
+INNER JOIN DATE_DIMENSION                DD ON PE.CONTACT_DATE = DD.CALENDAR_DT
+INNER JOIN PATIENT                       P ON PE.PAT_ID = P.PAT_ID
+INNER JOIN ZC_APPT_STATUS                ZAS ON PE.APPT_STATUS_C = ZAS.APPT_STATUS_C
+INNER JOIN CLARITY_PRC                   PRC ON PE.APPT_PRC_ID = PRC.PRC_ID
+INNER JOIN CLARITY_DEP                   DEP ON PE.DEPARTMENT_ID = DEP.DEPARTMENT_ID
+INNER JOIN ZC_CENTER                     ZC ON DEP.CENTER_C = ZC.CENTER_C
+INNER JOIN CLARITY_SER                   ESER ON PE.VISIT_PROV_ID = ESER.PROV_ID
+/*  LEFT JOIN COVERAGE                      COV ON PE.COVERAGE_ID = COV.COVERAGE_ID
+LEFT JOIN CLARITY_EPM                   EPM ON COV.PAYOR_ID = EPM.PAYOR_ID
+LEFT JOIN CLARITY_EPP                   EPP ON COV.PLAN_ID = EPP.BENEFIT_PLAN_ID
+LEFT JOIN ANALYTICS.PRO_CHARGES@NEXUS   PRO ON PE.PAT_ENC_CSN_ID = PRO.PAT_ENC_CSN_NUMBER
+"AND PE.CONTACT_DATE = TO_DATE(PRO.SERVICE_DATE_ID, 'YYYYMMDD')"
+AND TO_NUMBER(PRO.PRO_CHARGE_AMOUNT) > 0
+LEFT JOIN ANALYTICS.PROVIDERS@NEXUS     PROV ON PRO.BILL_PROVIDER_ID = PROV.PROVIDER_ID
+AND PROV.PROVIDER_SOURCE = 'EPIC'
+LEFT JOIN CLARITY_EAF_TIN               LTIN ON DEP.REV_LOC_ID = LTIN.FACILITY_ID
+AND LTIN.LINE = 1
+LEFT JOIN CLARITY_EAF_TIN               STIN ON DEP.SERV_AREA_ID = STIN.FACILITY_ID
+AND STIN.LINE = 1
+LEFT JOIN PAT_ENC_DX                    PED ON PE.PAT_ENC_CSN_ID = PED.PAT_ENC_CSN_ID
+LEFT JOIN CLARITY_EDG                   EDG ON PED.DX_ID = EDG.DX_ID
+LEFT JOIN G_CODES                       G ON C.PAT_ENC_CSN_ID = G.PAT_ENC_CSN_ID
+*/
+)
+
+
+", NONCANCELS AS ("
+SELECT DISTINCT
+MRN
+", trunc(AWV.CONTACT_DATE, 'yyyy') AS APPOINTMENT_YEAR"
+FROM
+AWV
+WHERE
+AWV.APPT_STATUS_NAME NOT IN (
+'CANCELED'
+", 'NO SHOW'"
+)
+)
+SELECT DISTINCT
+PAT_ENC_CSN_ID as true_cancellation
+FROM
+AWV CAN
+WHERE
+CAN.APPT_STATUS_NAME IN (
+'CANCELED'
+", 'NO SHOW'"
+)
+AND NOT EXISTS (
+SELECT
+1
+FROM
+NONCANCELS ACT
+WHERE
+1 = 1
+AND ACT.MRN = CAN.MRN
+"AND ACT.APPOINTMENT_YEAR = trunc(CAN.CONTACT_DATE, 'yyyy')"
+)
+
+
+/* TODO
+"update all_awvs set tin = compress(tin,'-');"
+"*/"""
+"""with dates as ("
+select
+"-- min(TO_DATE('01/01/2020','MM/DD/YYYY')) as start_date"
+"-- min(TO_DATE('12/31/2020','MM/DD/YYYY')) + 1 as end_date"
+--     min(EPIC_UTIL.EFN_DIN('T-112')) as START_DATE
+"--    ,min(EPIC_UTIL.EFN_DATEADD('d',1,EPIC_UTIL.EFN_DIN('T-112'))) as END_DATE"
+"trunc(sysdate,'YEAR') as year_start  -- finds eligible population from start of reporting year - filter date"
+",trunc(sysdate) - 365 as start_date -- rolling 365"
+",trunc(sysdate) as end_date -- eligible population - filter date - first day of week"
+from dual )
+
+--select * from dates;
+", encounter as ("
+select /*+ MATERIALIZE*/
+"enc.pat_id ,"
+"count(enc.pat_enc_csn_id) as csn ,"
+max(enc.effective_date_dt) as recent_enc_date
+
+from pat_enc enc
+inner join dates d on enc.effective_date_dt >= d.start_date and enc.effective_date_dt <= d.end_date
+
+where 1=1
+"and enc_type_c in ('101','2511')"
+and calculated_enc_stat_c = 2 -- completed appt or discharged admission
+"--and pat_id in ('Z4443167','Z2767296','Z5424983','Z1629030','Z945363','Z1990436','Z1767734','Z2419250') -- test patients"
+group by pat_id
+)
+--select count(*) from encounter ;
+
+", sdoh as ("
+select /*+ MATERIALIZE*/
+"dm.pat_id ,"
+"dm.record_id ,"
+"dm.age ,"
+"max(enc.recent_enc_date) as recent_enc_date ,"
+"dm.cur_pcp_prov_id ,"
+"max(fr.name) as """"Food Insecurity Risk"""","
+"max(reg7.METRIC_STRING_VALUE) as food_val ,"
+"max(trunc(EPIC_UTIL.EFN_UTC_TO_LOCAL(reg7.METRIC_LAST_UPD_TM))) as food_date ,"
+"max(ar.name) as """"Alcohol Risk"""","
+"max(reg1.METRIC_STRING_VALUE) as alcohol_val ,"
+"max(trunc(EPIC_UTIL.EFN_UTC_TO_LOCAL(reg1.METRIC_LAST_UPD_TM))) as alcohol_date ,"
+"max(sr.name) as """"Stress Risk"""" ,"
+"max(reg6.METRIC_STRING_VALUE) as stress_val ,"
+"max(trunc(EPIC_UTIL.EFN_UTC_TO_LOCAL(reg6.METRIC_LAST_UPD_TM))) as stress_date ,"
+"max(dr.name) as """"Depression Risk"""" ,"
+"max(reg2.METRIC_STRING_VALUE) as depr_val ,"
+"max(trunc(EPIC_UTIL.EFN_UTC_TO_LOCAL(reg2.METRIC_LAST_UPD_TM))) as depr_date ,"
+"max(tr.name) as """"Tobacco Risk"""" ,"
+"max(reg5.METRIC_STRING_VALUE) as tob_val ,"
+"max(trunc(EPIC_UTIL.EFN_UTC_TO_LOCAL(reg5.METRIC_LAST_UPD_TM))) as tob_date ,"
+"max(pr.name) as """"Physical ACtivity Risk"""" ,"
+"max(reg3.METRIC_STRING_VALUE) as phys_val ,"
+"max(trunc(EPIC_UTIL.EFN_UTC_TO_LOCAL(reg3.METRIC_LAST_UPD_TM))) as phys_date ,"
+"max(socr.name) as """"Social Connections Risk"""" ,"
+"max(reg0.METRIC_STRING_VALUE) as soc_val ,"
+"max(trunc(EPIC_UTIL.EFN_UTC_TO_LOCAL(reg0.METRIC_LAST_UPD_TM))) as soc_date ,"
+"max(finr.name) as """"Financial Stress Risk"""" ,"
+"max(reg4.METRIC_STRING_VALUE) as fin_val ,"
+"max(trunc(EPIC_UTIL.EFN_UTC_TO_LOCAL(reg4.METRIC_LAST_UPD_TM))) as fin_date ,"
+"max(trnr.name) as """"Transportation Risk"""" ,"
+"max(reg.METRIC_STRING_VALUE) as tx_val ,"
+"max(trunc(EPIC_UTIL.EFN_UTC_TO_LOCAL(reg.METRIC_LAST_UPD_TM))) as tx_date ,"
+"max(hsr.name) as """"Housing Stability"""" ,"
+"max(reg8.METRIC_STRING_VALUE) as house_val ,"
+"max(trunc(EPIC_UTIL.EFN_UTC_TO_LOCAL(reg8.METRIC_LAST_UPD_TM))) as house_date ,"
+"dm.has_chronic_heart_disease_yn ,"
+"dm.has_diabetes_yn ,"
+"dm.has_hypertension_yn ,"
+"dm.has_chronic_liver_disease_yn ,"
+"dm.has_chronic_lung_disease_yn ,"
+dm.has_obesity_yn
+
+from
+dm_wll_all dm
+inner join encounter enc on dm.pat_id = enc.pat_id -- join used as a filter for patients with encounters that took place within the last 365 days
+--roster_patients pt
+--inner join registry_data_info rdt on pt.pat_id = rdt.networked_id and rdt.rdt_type_c = '1'
+"--left join reg_data_metrics met on rdt.record_id = met.record_id and metrics_id in ( '97073','97064', '97058','10684320','97026','97060','97059','97057','97077','97087')"
+left join zc_food_insecurity_risk fr on fr.food_insecurity_risk_c = dm.FOOD_INSECURITY_RISK_C--met.metric_string_value = fr.food_insecurity_risk_c and met.metrics_id = '97073'
+left join REG_DATA_METRICS reg7 on dm.RECORD_ID = reg7.RECORD_ID and reg7.METRICS_ID = 97073 and reg7.metric_string_value is not null -- food
+left join zc_alcohol_risk ar on dm.ALCOHOL_RISK_C = ar.alcohol_risk_c --and met.metrics_id = '97064'
+left join REG_DATA_METRICS reg1 on dm.RECORD_ID = reg1.RECORD_ID and reg1.METRICS_ID = 97064 and reg1.metric_string_value is not null--alcohol
+left join zc_stress_risk sr on dm.STRESS_RISK_C = sr.stresS_risk_c --and met.metrics_id= '97058'
+left join REG_DATA_METRICS reg6 on dm.RECORD_ID = reg6.RECORD_ID and reg6.METRICS_ID = 97058 and reg6.metric_string_value is not null --stress
+"left join reg_data_metrics met on met.recorD_id = dm.record_id and met.metrics_id in ('10684320' /*depression risk metric*/,'97087'/*housing stability*/)"
+left join zc_fin_resource_risk dr on met.metric_string_value = dr.fin_resource_risk_c and met.metrics_id = '10684320' --labeled as financial resource risk but custom depression risk metric uses this cat list
+left join REG_DATA_METRICS reg2 on dm.RECORD_ID = reg2.RECORD_ID and reg2.METRICS_ID = 10684320 and reg2.metric_string_value is not null --depression
+left join zc_fin_resource_risk tr on dm.TOBACCO_RISK_C = tr.fin_resource_risk_c -- and met.metrics_id = '97026' --tobacco metric uses this cat list ECT 7030
+left join REG_DATA_METRICS reg5 on dm.RECORD_ID = reg5.RECORD_ID and reg5.METRICS_ID = 97026 and reg5.metric_string_value is not null --tobacco
+left join zc_phys_inactivity_risk pr on dm.PHYS_INACTIVITY_RISK_C = pr.phys_inactivity_risk_c --and met.metrics_id = '97060'
+left join REG_DATA_METRICS reg3 on dm.RECORD_ID = reg3.RECORD_ID and reg3.METRICS_ID = 97060 and reg3.metric_string_value is not null --Physical Activity
+left join zc_social_isolation_risk socr on dm.SOCIAL_ISOLATION_RISK_C = socr.social_isolation_risk_c --and met.metrics_id = '97059'
+left join REG_DATA_METRICS reg0 on dm.RECORD_ID = reg0.RECORD_ID and reg0.METRICS_ID = 97059 and reg0.metric_string_value is not null-- social
+left join zc_fin_resourcE_risk finr on dm.FIN_RESOURCE_RISK_C = finr.fin_resource_risk_c --and met.metrics_id = '97057' --financial resource risk
+left join REG_DATA_METRICS reg4 on dm.RECORD_ID = reg4.RECORD_ID and reg4.METRICS_ID = 97057 and reg4.metric_string_value is not null--financial
+left join zc_transport_needs_risk trnr on dm.TRANSPORT_NEEDS_RISK_C = trnr.transport_needs_risk_c --and met.metricS_id = '97077'
+left join REG_DATA_METRICS reg on dm.RECORD_ID = reg.RECORD_ID and reg.METRICS_ID = 97077 and reg.metric_string_value is not null--transportation
+left join zc_fin_resource_risk hsr on met.metric_string_value = hsr.fin_resource_risk_c and met.metricS_id = '97087' --housing risk
+left join REG_DATA_METRICS reg8 on dm.RECORD_ID = reg8.RECORD_ID and reg8.METRICS_ID = 97087 and reg.metric_string_value is not null
+--left join dates d on trunc(EPIC_UTIL.EFN_UTC_TO_LOCAL(reg8.METRIC_LAST_UPD_TM)) between d.start_date and d.end_date  --housing
+where
+met.metric_string_value is not null
+and
+dm.registry_status_c = '1'
+and
+age >= 18
+
+group by
+"dm.pat_id ,"
+"dm.record_id ,"
+"dm.age ,"
+"dm.cur_pcp_prov_id ,"
+"dm.has_chronic_heart_disease_yn ,"
+"dm.has_diabetes_yn ,"
+"dm.has_hypertension_yn ,"
+"dm.has_chronic_liver_disease_yn ,"
+"dm.has_chronic_lung_disease_yn ,"
+dm.has_obesity_yn
+)
+"--select * from sdoh ;where pat_id in ('Z1990436','Z1767734','Z2419250') ;"
+--select count(*) from sdoh ;
+
+", pcp_deets as ( /*+ MATERIALIZE*/"
+select distinct
+"sd.pat_id ,"
+"sd.cur_pcp_prov_id ,"
+"pcp.prov_name ,"
+"pcp.department_id ,"
+"pcp.department_name ,"
+"-- pcp.external_name ,"
+"pcp.loc_name ,"
+pcp.serv_area_name--ser2.primary_dept_id as test
+
+from sdoh sd
+inner join d_prov_primary_hierarchy pcp on sd.cur_pcp_prov_id = pcp.prov_id
+--inner join clarity_ser_2 ser2 on sd.cur_pcp_prov_id = ser2.prov_id
+--  inner join clarity_dep dep on ser2.primary_dept_id = dep.department_id
+
+)
+
+-- select * from pcp_deets
+
+
+
+
+--^this block extracts all the patients who has an active membership in a registry in current year; ; used to evaluate for root_cause as Comorbidity^
+"--, chronic_conditions as ("
+--(/* table for all registry inclusion over time. Find the last entry prior to the encounter and determine if patient was active on that registry for that date*/
+--select
+--pat_id
+"----,registry_id"
+"----,change_instant_utc_dttm"
+"----,hosp_admsn_time"
+"----,status_c"
+"--,max(case when status_c = 1"
+"--  and registry_id in ('82000','82001','82005','82011','84000','82030',"
+"--  '82008','82004','82009','82006','15000','100423','82012','82900','82007',"
+"--  '100389','100266','82010','100455','82904','100096','82901',"
+"--  '83921','82600') then 'Comorbidity' else null end) as root_cause --^returns 'comorbity' for patients if they are active in these registries - diabetes, asthma, chonic kidney disease, chronic liver disease, ALS,"
+"----cancer, hypertension, osteoperosis, congestive heart failure, copd, coronary artery, cosmos, dementia, cystic fibrosis, depression, obesity, MS registry, stroke, HIV, IBD, schizophrenia, lupus, ADHD, PTSD, chronic dialysis^"
+--from (
+--select /*+ MATERIALIZE*/
+"--pat_id ,"
+"--listagg(display_name, ', ') within group (order by first_include_dttm ) as registry_list"
+--from (
+--select
+"----ROW_NUMBER () OVER (PARTITION BY sd.pat_id,reg.registry_id ORDER BY reg.change_instant_utc_dttm DESC) as RN"
+--distinct
+--reg.line
+"--,rdt.networked_id as pat_id"
+"--,reg.registry_id"
+"--,rgc.display_name"
+"--,reg.first_include_dttm"
+"--,reg.last_update_dttm"
+"----,menc.hosp_admsn_time"
+"--,reg.registry_status_c"
+"--,rgc.registry_cat_c"
+--
+--from sdoh sd
+--    left join registry_data_info rdt on sd.pat_id = rdt.networked_id
+--    inner join reg_data_membershp reg on reg.record_id = rdt.record_id
+--    inner join registry_config rgc on reg.registry_id = rgc.registry_id
+--
+--where 1=1
+--  --and reg.change_instant_utc_dttm <= menc.hosp_admsn_time
+--  and rgc.registry_cat_c = 1 -- 1 = chronic disease
+--  and reg.registry_status_c = 1
+--  )
+--  group by pat_id
+--  )
+--  --select * from chronic_conditions ;
+"-- and reg.registry_id in ('82002','82000','82001','82005','82011','84000','82030','82008','82004','82009','82006','15000','100423','82012','82900','82007','100389','100266','82010','100455','82904','100096','82901','83921','82600')--^returns patients if they are active in these registries - diabetes, asthma, chonic kidney disease, chronic liver disease, ALS,"
+"--cancer, hypertension, osteoperosis, congestive heart failure, copd, coronary artery, cosmos, dementia, cystic fibrosis, depression, obesity, MS registry, stroke, HIV, IBD, schizophrenia, lupus, ADHD, PTSD, chronic dialysis^"
+--)sub
+--where 1=1
+--  and rn = 1
+--group by pat_id
+--)
+--select count(1) from chronic_conditions;
+--select * from chronic_conditions;
+
+", num_ed_visits as ("
+select /*+ MATERIALIZE*/
+
+"fee.pat_id ,"
+count(pat_enc_csn_id) as ed_csn
+
+from f_ed_encounters fee
+inner join patient pat on fee.pat_id = pat.pat_id
+inner join dates d on fee.hospital_discharge_date >= d.year_start and hospital_discharge_date <= d.end_date -- do we want this calendar year or a rolling 365 lookback
+
+where 1=1
+and pat.death_date is null
+"and fee.ed_disposition_c not in ('5','6','7')"
+
+group by fee.pat_id
+
+)
+"--select * from num_ed_visits ;where pat_id in ('Z2370894','Z3631516') ;"
+", num_of_adm as ("
+select /*+ MATERIALIZE*/
+"hsp.pat_id ,"
+count(pat_enc_csn_id) hsp_csn
+
+from pat_enc_hsp hsp
+inner join patient pat on hsp.pat_id = pat.pat_id
+inner join dates d on trunc(hsp.hosp_disch_time) >= d.year_start and trunc(hsp.hosp_disch_time) <= d.end_date -- do we want this calendar year or a rolling 365 lookback?
+
+where 1=1
+"and adt_pat_class_c in ('101','104') -- ip and obs -- what pat classes are we wanting?"
+and pat.death_date is null
+
+group by hsp.pat_id
+)
+
+--select * from num_of_adm
+", stage as ( /*+ MATERIALIZE*/"
+select
+"sd.pat_id ,"
+"pat.pat_mrn_id ,"
+"pat.pat_name ,"
+"sd.age ,"
+"pat.birth_date ,"
+"zpr.name as """"Race"""" ,"
+"zeg.name as """"Ethnicity"""" ,"
+"sx.name as """"Gender"""" ,"
+"sd.recent_enc_date ,"
+"pat.city ,"
+"pat.zip ,"
+"sd.record_id ,"
+"sd.cur_pcp_prov_id ,"
+"sd.""""Food Insecurity Risk"""","
+"sd.food_date ,"
+"sd.""""Alcohol Risk"""","
+"sd.alcohol_date ,"
+"sd.""""Stress Risk"""" ,"
+"sd.stress_date ,"
+"sd.""""Depression Risk"""" ,"
+"sd.depr_date ,"
+"sd.""""Tobacco Risk"""" ,"
+"sd.tob_date ,"
+"sd.""""Physical ACtivity Risk"""" ,"
+"sd.phys_date ,"
+"sd.""""Social Connections Risk"""" ,"
+"sd.soc_date ,"
+"sd.""""Financial Stress Risk"""" ,"
+"sd.fin_date ,"
+"sd.""""Transportation Risk"""" ,"
+"sd.tx_date ,"
+"sd.""""Housing Stability"""" ,"
+"sd.house_date ,"
+"pcp.prov_name ,"
+"case when pcp.department_name is null then 'Not Attributed' else pcp.department_name end as department_name ,"
+"case when pcp.loc_name is null then 'Not Attributed' else pcp.loc_name end as loc_name ,"
+"case when pcp.serv_area_name is null then 'Not Attributed' else pcp.serv_area_name end as serv_area_name ,"
+"ed.ed_csn as num_ed_visits ,"
+"adm.hsp_csn as num_adm_visits ,"
+"has_chronic_heart_disease_yn ,"
+"has_diabetes_yn ,"
+"has_hypertension_yn ,"
+"has_chronic_liver_disease_yn ,"
+"has_chronic_lung_disease_yn ,"
+has_obesity_yn
+-- con.registry_list
+
+from sdoh sd
+inner join patient pat on sd.pat_id = pat.pat_id
+left join pcp_deets pcp on sd.pat_id = pcp.pat_id
+--left join chronic_conditions con on sd.pat_id = con.pat_id
+left join num_ed_visits ed on sd.pat_id = ed.pat_id
+left join num_of_adm adm on sd.pat_id = adm.pat_id
+"	    left  join zc_sex           sx    on pat.sex_c          = sx.RCPT_MEM_SEX_C"
+left  join patient_race     rac   on pat.pat_id         = rac.pat_id and rac.line = 1
+left join zc_patient_race  zpr   on rac.patient_race_c = zpr.patient_race_c
+left join zc_ethnic_group zeg    on pat.ethnic_group_c = zeg.ethnic_group_c
+
+where 1=1
+and pcp.prov_name is not null
+
+)
+
+"select * from stage"""

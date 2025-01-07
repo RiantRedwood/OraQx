@@ -1,0 +1,1097 @@
+﻿table_id,table_name,table_query,content_id,content_name,project_name,source
+0008e9e2-bc76-b79e-c235-18ec009a53d9,Kronos Time,"/******************************
+**  Ticke#:
+**  Name: Digital Med - Team Member Kronos Time
+**  Requested By: Rebecca Arriaga
+**  Description: This query pulls in the time/days worked and taken off from Kronos
+**  Author: Jackson Wilde
+**  Date: 03.21.2023
+
+
+
+
+*******************************
+**  Change History
+*******************************
+**  Version   Date              Author            Description
+**  -------   --------          ------------      ----------------------------------
+**  1         03.21.2023        Jackson Wilde     V1: Created
+**  2         04.11.2023        Jackson Wilde     V2: Updated to use the WFCTOTAL table based on information recieved from Peter Thompson about the Kronos data structure.
+**  3         04.12.2023        Jackson Wilde     V3: Removed unecessary joins and limited query to only pulling in the REG-Regular paycode since this should already account for time off.
+**  4         08.15.2023        Aili Zhou         V4: Changed Days_Worked logic to count days with less than 5 hours worked as half days
+**  5         10.20.2023        Aili Zhou         V5: Added Paycode 137 to include over time hours, per Leigh Crabtree's request
+*******************************/
+
+SELECT
+tot.EMPLOYEEID
+,prs.PERSONNUM
+,tot.ADJAPPLYDTM            SHIFT_DATE
+,MIN(tot.STARTDTM)          SHIFT_START_DT
+,MAX(tot.ENDDTM)            SHIFT_END_DT
+--,LEAD(tot.ADJAPPLYDTM, 1) OVER(PARTITION BY tot.EMPLOYEEID ORDER BY tot.ADJAPPLYDTM)    TIME_SHEET_END_DATE 
+--,tot.APPLYDTM               TIME_POSTED_DATE
+--,pc.NAME                    PAY_CODE_NAME
+--,tot.PAYCODEID
+,SUM(tot.DURATIONSECSQTY/3600)      HOURS_WORKED --Already accounts for time off.
+,COUNT(DISTINCT(tot.ADJAPPLYDTM))   DAYS_WORKED_2 --old logic
+,case when SUM(tot.DURATIONSECSQTY/3600) <=5 then 0.5*COUNT(DISTINCT(tot.ADJAPPLYDTM))
+when SUM(tot.DURATIONSECSQTY/3600)>5 then 1*COUNT(DISTINCT(tot.ADJAPPLYDTM))
+END AS DAYS_WORKED --New Logic Requested by Care Team
+
+
+
+        FROM
+        WFCTOTAL tot
+        INNER JOIN PAYCODE pc ON tot.PAYCODEID = pc.PAYCODEID
+        INNER JOIN JAIDS emp ON tot.EMPLOYEEID = emp.EMPLOYEEID
+        INNER JOIN PERSON prs on emp.PERSONID = prs.PERSONID
+        INNER JOIN WTKEMPLOYEE sup ON tot.EMPLOYEEID = sup.WTKEMPLOYEEID
+
+
+
+
+        WHERE
+        tot.PAYCODEID IN  (141/*REG-REGULAR*/, 137 /*OVERTIME*/) --Using this criteria so that the only time included is actual time worked.
+        AND 
+        tot.ADJAPPLYDTM BETWEEN ADD_MONTHS(TRUNC(SYSDATE, 'YYYY'), -24) AND TRUNC(SYSDATE)-1
+        AND tot.APPLYDTM/*post date*/ = tot.ADJAPPLYDTM/*shift date*/ 
+        AND pc.TYPE = 'P'/*PAYCODE TYPE*/
+        AND sup.SUPERVISORID IN (73793/*Rebecca Arriaga*/, 38559/*Val Williams*/, 56679/*Leigh Crabtree*/, 70931/*Danny Mack*/, 33621/*Heather Aaron*/, 37176/*Heather Pattison*/, 67137/*Adrian Hawley*/) --This criteria will need to be updated to reference a department or cost center long term.
+        --AND tot.EMPLOYEEID = 142420 --97059/*IAN HATLEE*/ 
+        --AND prs.PERSONNUM = '1033688'
+        --AND pm.EFFECTIVEDTM <= tot.APPLYDTM
+        --AND pm.EXPIRATIONDTM > tot.APPLYDTM
+
+
+
+
+        GROUP BY
+        tot.EMPLOYEEID
+        ,prs.PERSONNUM
+        ,tot.ADJAPPLYDTM
+
+
+        ORDER BY
+        tot.EMPLOYEEID
+        ,tot.ADJAPPLYDTM",a0e27cdd-bfee-4527-938b-f6ef189f9f87,Digital Med - Team Member Phone Stats V2 DS,Digital Med - Care/Support Team Data Sources DEV,datasource
+0008e9e2-bc76-b79e-c235-18ec009a53d9,Kronos Time,"/******************************
+**  Ticke#:
+**  Name: Digital Med - Team Member Kronos Time
+**  Requested By: Rebecca Arriaga
+**  Description: This query pulls in the time/days worked and taken off from Kronos
+**  Author: Jackson Wilde
+**  Date: 03.21.2023
+
+
+
+
+*******************************
+**  Change History
+*******************************
+**  Version   Date              Author            Description
+**  -------   --------          ------------      ----------------------------------
+**  1         03.21.2023        Jackson Wilde     V1: Created
+**  2         04.11.2023        Jackson Wilde     V2: Updated to use the WFCTOTAL table based on information recieved from Peter Thompson about the Kronos data structure.
+**  3         04.12.2023        Jackson Wilde     V3: Removed unecessary joins and limited query to only pulling in the REG-Regular paycode since this should already account for time off.
+**  4         08.15.2023        Aili Zhou         V4: Changed Days_Worked logic to count days with less than 5 hours worked as half days
+**  5         10.20.2023        Aili Zhou         V5: Added Paycode 137 to include over time hours, per Leigh Crabtree's request
+*******************************/
+
+SELECT
+tot.EMPLOYEEID
+,prs.PERSONNUM
+,tot.ADJAPPLYDTM            SHIFT_DATE
+,MIN(tot.STARTDTM)          SHIFT_START_DT
+,MAX(tot.ENDDTM)            SHIFT_END_DT
+--,LEAD(tot.ADJAPPLYDTM, 1) OVER(PARTITION BY tot.EMPLOYEEID ORDER BY tot.ADJAPPLYDTM)    TIME_SHEET_END_DATE 
+--,tot.APPLYDTM               TIME_POSTED_DATE
+--,pc.NAME                    PAY_CODE_NAME
+--,tot.PAYCODEID
+,SUM(tot.DURATIONSECSQTY/3600)      HOURS_WORKED --Already accounts for time off.
+,COUNT(DISTINCT(tot.ADJAPPLYDTM))   DAYS_WORKED_2 --old logic
+,case when SUM(tot.DURATIONSECSQTY/3600) <=5 then 0.5*COUNT(DISTINCT(tot.ADJAPPLYDTM))
+when SUM(tot.DURATIONSECSQTY/3600)>5 then 1*COUNT(DISTINCT(tot.ADJAPPLYDTM))
+END AS DAYS_WORKED --New Logic Requested by Care Team
+
+
+
+        FROM
+        WFCTOTAL tot
+        INNER JOIN PAYCODE pc ON tot.PAYCODEID = pc.PAYCODEID
+        INNER JOIN JAIDS emp ON tot.EMPLOYEEID = emp.EMPLOYEEID
+        INNER JOIN PERSON prs on emp.PERSONID = prs.PERSONID
+        INNER JOIN WTKEMPLOYEE sup ON tot.EMPLOYEEID = sup.WTKEMPLOYEEID
+
+
+
+
+        WHERE
+        tot.PAYCODEID IN  (141/*REG-REGULAR*/, 137 /*OVERTIME*/) --Using this criteria so that the only time included is actual time worked.
+        AND 
+        tot.ADJAPPLYDTM BETWEEN ADD_MONTHS(TRUNC(SYSDATE, 'YYYY'), -24) AND TRUNC(SYSDATE)-1
+        AND tot.APPLYDTM/*post date*/ = tot.ADJAPPLYDTM/*shift date*/ 
+        AND pc.TYPE = 'P'/*PAYCODE TYPE*/
+        AND sup.SUPERVISORID IN (73793/*Rebecca Arriaga*/, 38559/*Val Williams*/, 56679/*Leigh Crabtree*/, 70931/*Danny Mack*/, 33621/*Heather Aaron*/, 37176/*Heather Pattison*/, 67137/*Adrian Hawley*/) --This criteria will need to be updated to reference a department or cost center long term.
+        --AND tot.EMPLOYEEID = 142420 --97059/*IAN HATLEE*/ 
+        --AND prs.PERSONNUM = '1033688'
+        --AND pm.EFFECTIVEDTM <= tot.APPLYDTM
+        --AND pm.EXPIRATIONDTM > tot.APPLYDTM
+
+
+
+
+        GROUP BY
+        tot.EMPLOYEEID
+        ,prs.PERSONNUM
+        ,tot.ADJAPPLYDTM
+
+
+        ORDER BY
+        tot.EMPLOYEEID
+        ,tot.ADJAPPLYDTM",9c79c71c-fcb0-405b-836b-22871587865b,Digital Med - Care Team and Support Team Scorecard,Digital Medicine Operations *Internal* PROD,workbook
+0008e9e2-bc76-b79e-c235-18ec009a53d9,Kronos Time,"/******************************
+**  Ticke#:
+**  Name: Digital Med - Team Member Kronos Time
+**  Requested By: Rebecca Arriaga
+**  Description: This query pulls in the time/days worked and taken off from Kronos
+**  Author: Jackson Wilde
+**  Date: 03.21.2023
+
+
+
+
+*******************************
+**  Change History
+*******************************
+**  Version   Date              Author            Description
+**  -------   --------          ------------      ----------------------------------
+**  1         03.21.2023        Jackson Wilde     V1: Created
+**  2         04.11.2023        Jackson Wilde     V2: Updated to use the WFCTOTAL table based on information recieved from Peter Thompson about the Kronos data structure.
+**  3         04.12.2023        Jackson Wilde     V3: Removed unecessary joins and limited query to only pulling in the REG-Regular paycode since this should already account for time off.
+**  4         08.15.2023        Aili Zhou         V4: Changed Days_Worked logic to count days with less than 5 hours worked as half days
+**  5         10.20.2023        Aili Zhou         V5: Added Paycode 137 to include over time hours, per Leigh Crabtree's request
+*******************************/
+
+SELECT
+tot.EMPLOYEEID
+,prs.PERSONNUM
+,tot.ADJAPPLYDTM            SHIFT_DATE
+,MIN(tot.STARTDTM)          SHIFT_START_DT
+,MAX(tot.ENDDTM)            SHIFT_END_DT
+--,LEAD(tot.ADJAPPLYDTM, 1) OVER(PARTITION BY tot.EMPLOYEEID ORDER BY tot.ADJAPPLYDTM)    TIME_SHEET_END_DATE 
+--,tot.APPLYDTM               TIME_POSTED_DATE
+--,pc.NAME                    PAY_CODE_NAME
+--,tot.PAYCODEID
+,SUM(tot.DURATIONSECSQTY/3600)      HOURS_WORKED --Already accounts for time off.
+,COUNT(DISTINCT(tot.ADJAPPLYDTM))   DAYS_WORKED_2 --old logic
+,case when SUM(tot.DURATIONSECSQTY/3600) <=5 then 0.5*COUNT(DISTINCT(tot.ADJAPPLYDTM))
+when SUM(tot.DURATIONSECSQTY/3600)>5 then 1*COUNT(DISTINCT(tot.ADJAPPLYDTM))
+END AS DAYS_WORKED --New Logic Requested by Care Team
+
+
+
+        FROM
+        WFCTOTAL tot
+        INNER JOIN PAYCODE pc ON tot.PAYCODEID = pc.PAYCODEID
+        INNER JOIN JAIDS emp ON tot.EMPLOYEEID = emp.EMPLOYEEID
+        INNER JOIN PERSON prs on emp.PERSONID = prs.PERSONID
+        INNER JOIN WTKEMPLOYEE sup ON tot.EMPLOYEEID = sup.WTKEMPLOYEEID
+
+
+
+
+        WHERE
+        tot.PAYCODEID IN  (141/*REG-REGULAR*/, 137 /*OVERTIME*/) --Using this criteria so that the only time included is actual time worked.
+        AND 
+        tot.ADJAPPLYDTM BETWEEN ADD_MONTHS(TRUNC(SYSDATE, 'YYYY'), -24) AND TRUNC(SYSDATE)-1
+        AND tot.APPLYDTM/*post date*/ = tot.ADJAPPLYDTM/*shift date*/ 
+        AND pc.TYPE = 'P'/*PAYCODE TYPE*/
+        AND sup.SUPERVISORID IN (73793/*Rebecca Arriaga*/, 38559/*Val Williams*/, 56679/*Leigh Crabtree*/, 70931/*Danny Mack*/, 33621/*Heather Aaron*/, 37176/*Heather Pattison*/, 67137/*Adrian Hawley*/) --This criteria will need to be updated to reference a department or cost center long term.
+        --AND tot.EMPLOYEEID = 142420 --97059/*IAN HATLEE*/ 
+        --AND prs.PERSONNUM = '1033688'
+        --AND pm.EFFECTIVEDTM <= tot.APPLYDTM
+        --AND pm.EXPIRATIONDTM > tot.APPLYDTM
+
+
+
+
+        GROUP BY
+        tot.EMPLOYEEID
+        ,prs.PERSONNUM
+        ,tot.ADJAPPLYDTM
+
+
+        ORDER BY
+        tot.EMPLOYEEID
+        ,tot.ADJAPPLYDTM",6df99cbd-09e6-4b5b-ae86-5bd7714e0fb5,Digital Med - Care Team and Support Team Scorecard,Digital Medicine DEV,workbook
+00224c0e-9faa-4fc3-f279-19b855d07995,Custom SQL Query,"SELECT 
+
+  ""_users"".""id"" AS ""_users_id"",
+  upper(""_users"".""name"") AS ""_users_name"",
+  ""_users"".""login_at"" AS ""login_at"",
+  ""_users"".""friendly_name"" AS ""friendly_name"",
+  ""_users"".""domain_id"" AS ""domain_id"",
+  ""_users"".""system_user_id"" AS ""_users_system_user_id"",
+  ""_users"".""domain_name"" AS ""_users_domain_name"",
+  ""_users"".""domain_short_name"" AS ""domain_short_name"",
+  ""_users"".""site_id"" AS ""_users_site_id"",
+   si.name as Site_Name,
+  users.site_role_id,
+  case when _system_users.admin_level = '10' then '10000000'
+  else  sr.licensing_rank end as licensing_rank,
+  case when _system_users.admin_level = '10' then 'System Admin'
+  else  sr.display_name end as ""Site Role""
+  
+FROM ""public"".""_users"" ""_users""
+--8461
+inner join users
+on ""users"".""system_user_id"" = ""_users"".""system_user_id""
+and ""users"".""site_id"" = ""_users"".""site_id""
+left join site_roles sr
+on users.site_role_id = sr.id
+left join sites si
+on users.site_id = si.id
+left join _system_users
+on ""users"".""system_user_id"" = ""_system_users"".""id"" 
+where ""_users"".""name"" not in ('_system','guest','svc.tabrunas')",ff30a1fa-abd9-44ea-9382-c6dd1335da27,Custom Server Admin Views,Administrative Views DEV,workbook
+0065d4ea-348f-60db-6122-4d5227f11d3b,Custom SQL Query,"select i.*, T.PHONE_CALL_TYPE_DESC 
+from analytics.phone_call_type_intervals i
+left join analytics.phone_call_types t on i.phone_call_type_id = t.phone_call_type_id
+where i.phone_call_type_id in (1747, 1775, 1774, 1739, 1740, 1741, 1742, 1743, 1744, 1745, 1746, 1748
+                              , 2583, 2584, 2585, 2586) --starting with 2's added in 2020
+and T.PHONE_CALL_TYPE_DESC is not null
+and interval_start_date_id >= 20220101",95205c7a-3799-4bef-a308-5c9cacbb4cb4,z_bup : URAC as of 042324 (prior to cleanup),SK - DEV,workbook
+00b90710-88ea-4e18-f0c6-9d38562226a6,Custom SQL Query,"SELECT
+CT.EnterpriseName,
+CT.CallTypeID ,
+CONVERT(DATETIME,Convert(Date,CTI.DateTime)) as Call_Date ,
+CONVERT(DATETIME, CONVERT(VARCHAR(13), CTI.DateTime, 120) + ':00:00') as Call_StartDate_Hour,	
+Sum(ISNULL(CTI.CallsHandled,0))  as CallsHandled,
+Sum(ISNULL(CTI.CallsOffered,0)) as CallsOffered,
+Sum(ISNULL(CTI.CallsAnswered,0)) as CallsAnswered,
+Sum(ISNULL(CTI.TotalCallsAband,0)) as CallsAbandoned,
+Sum(ISNULL(CTI.CallsRONA,0)) as CallsRONA,
+sum(isnull(CTI.RouterQueueWaitTime,0)) as RouterQueueWaitTime,
+sum(isnull(CTI.RouterQueueCalls,0)) as RouterQueueCalls,
+sum(isnull(CTI.MaxCallWaitTime,0)) as MaxCallWaitTime,
+sum(isnull(CTI.HandleTime,0)) as HandleTime,
+sum(isnull(CTI.CallsRouted,0)) as CallsRouted,
+sum(isnull(CTI.MaxCallsQueued,0)) as MaxCallsQueued,
+sum(isnull(CTI.MaxHoldTime,0)) as MaxHoldTime,
+sum(isnull(CTI.ReturnBusy,0))  as ReturnBusy,
+sum(isnull(CTI.AnswerWaitTime,0))  as AnswerWaitTime
+FROM Call_Type CT
+JOIN Call_Type_Interval CTI  ON CT.CallTypeID = CTI.CallTypeID
+
+WHERE
+     CTI.DateTime >= '2024-05-01' 
+	 AND 
+
+	  CT.CallTypeID IN (
+--5088, -- OPT 1 replace with 5123
+5123, 
+--5089, --OPT4 and OPT2 replace with 5072. 
+10084, -- Work number OPT 3 (newly created today)
+5072, -- payroll 
+10085, -- New Payroll (newly created today)
+5090,
+--5091,
+--5092, -- OPT 5 (leader line) replace with 10083
+10083, 
+6943,
+7304,
+7305,
+7306,
+5080,
+5120, --this is OPT 6
+5121 -- voicemail
+)
+group by 
+CT.EnterpriseName,
+CT.CallTypeID,
+CONVERT(DATETIME,Convert(Date,CTI.DateTime)),
+CONVERT(DATETIME, CONVERT(VARCHAR(13), CTI.DateTime, 120) + ':00:00')",b59b24d9-1a9e-4ded-8df0-0a2621a4cca0,HR Connect Call Stats,HR Connect PROD,workbook
+00dc0bbe-fc72-ff24-3f21-d678b0faa948,BPA Response Rate,"/*
+Purpose:
+  This script is the data source for the Tableau workbook Connnected MOM - Program Offer Rates by Provider.
+  OB wants to see all of their providers listed in the dashboard, whether they are particpating in the
+  Connected MOM program or not.  So a list of all OB providers with their participation status is left 
+  joined to data about OB visits.
+Author: Kent Boyer
+Last Updated: 11/12/2021
+*/
+WITH
+OB_Providers as
+(
+  SELECT 
+      ser.PROV_NAME ""Provider""
+      ,prov_type.NAME as ""Provider Type""
+      ,ser.PROV_ID
+      ,dep.DEPARTMENT_NAME ""Provider Primary Department""
+      ,dep.GL_PREFIX as ""Provider Cost Center""
+      ,loc.LOC_NAME as ""Provider Primary Location""
+      ,sa.SERV_AREA_NAME ""Service Area""      
+      ,case when x_emp.DM_PROGRAMS_C = 3 then 'Y' else 'N' end ""Participating""
+  FROM    
+      CLARITY_EMP emp
+  INNER JOIN
+      CLARITY_SER ser on emp.PROV_ID = ser.PROV_ID
+                      and ser.PROV_TYPE in ('Physician','Midwife','Nurse Practitioner','Resident','Physician Assistant')
+  INNER JOIN 
+      CLARITY_SER_2 ser2 on ser.PROV_ID = ser2.PROV_ID
+  INNER JOIN
+      CLARITY_DEP dep on ser2.PRIMARY_DEPT_ID = dep.DEPARTMENT_ID
+  INNER JOIN
+      CLARITY_LOC loc on dep.REV_LOC_ID = loc.LOC_ID
+  INNER JOIN 
+      ZC_PROV_TYPE prov_type on ser.PROVIDER_TYPE_C = prov_type.PROV_TYPE_C
+  LEFT JOIN
+      X_EMP_DIGMED_ENROLL_PROG x_emp on emp.USER_ID = x_emp.USER_NUMBER_ID and x_emp.DM_PROGRAMS_C = 3
+  LEFT JOIN
+      CLARITY_SA sa on dep.SERV_AREA_ID = sa.SERV_AREA_ID
+  WHERE 1 = 1
+      and dep.SPECIALTY in ('Obstetrics and Gynecology','Obstetrics')
+      --and dep.SERV_AREA_ID = 10
+      and ser.ACTIVE_STATUS = 'Active'
+      and emp.USER_STATUS_C = 1
+      and emp.PROV_ID is not NULL
+  GROUP BY
+      ser.PROV_NAME
+      ,prov_type.NAME
+      ,ser.PROV_ID
+      ,dep.DEPARTMENT_NAME
+      ,dep.GL_PREFIX
+      ,loc.LOC_NAME
+      ,sa.SERV_AREA_NAME
+      ,case when x_emp.DM_PROGRAMS_C = 3 then 'Y' else 'N' end
+
+)
+--select count(*) from OB_Providers; --4.2 sec
+,programs as
+	(
+	SELECT 
+		'Connected MOM' as ""Program"" 
+		,4021 as ""Eligibility Alert ID""
+		,108795 as ""Enrollment Order ID""
+	FROM DUAL
+	)
+
+,pregnancies as
+/* ********************************************************
+pregnancies - One row per pregnancy episode
+********************************************************* */
+( 
+  SELECT
+      hsb_pregnancy.EPISODE_ID as ""Pregnancy Episode ID""
+      ,hsb_pregnancy.PAT_LINK_ID as ""Mother EPT""
+      ,hsb_pregnancy.START_DATE as ""Pregnancy Episode Start""
+      ,hsb_pregnancy.END_DATE as ""Pregnancy Episode End""
+      ,case 
+          When Hsb_Pregnancy_2.Ob_Delivery_Date Is Not Null Then Hsb_Pregnancy_2.Ob_Delivery_Date
+          when hsb_pregnancy_2.OB_DELIVERY_DATE is null and hsb_delivery_2.OB_DEL_BIRTH_DTTM is not NULL then EPIC_UTIL.EFN_UTC_TO_LOCAL(hsb_delivery_2.OB_DEL_BIRTH_DTTM)
+          when hsb_pregnancy_2.OB_DELIVERY_DATE is null and hsb_delivery_2.OB_DEL_BIRTH_DTTM is null and delivery_admit.HOSP_ADMSN_TIME is not NULL then delivery_admit.HOSP_ADMSN_TIME
+      end as ""Delivery Date""
+      --Determine date of conception
+      ,case
+          --Simplify the logic by coalescing hsb_pregnancy_2.OB_DELIVERY_DATE,hsb_delivery_2.OB_DEL_BIRTH_DTTM and delivery_admit.HOSP_ADMSN_TIME
+          -- We know the delivery date 
+          when coalesce(hsb_pregnancy_2.OB_DELIVERY_DATE,EPIC_UTIL.EFN_UTC_TO_LOCAL(hsb_delivery_2.OB_DEL_BIRTH_DTTM),delivery_admit.HOSP_ADMSN_TIME) is not NULL
+              then COALESCE(hsb_pregnancy_2.OB_DELIVERY_DATE,EPIC_UTIL.EFN_UTC_TO_LOCAL(hsb_delivery_2.OB_DEL_BIRTH_DTTM),delivery_admit.HOSP_ADMSN_TIME) - COALESCE(hsb_delivery_2.OB_HX_GEST_AGE,  (40*7))
+          -- We don't know the delivery date
+          when coalesce(hsb_pregnancy_2.OB_DELIVERY_DATE,EPIC_UTIL.EFN_UTC_TO_LOCAL(hsb_delivery_2.OB_DEL_BIRTH_DTTM),delivery_admit.HOSP_ADMSN_TIME) is NULL then
+              case
+                  --We know the working delivery date 
+                  when hsb_pregnancy.OB_WRK_EDD_DT is not NULL 
+                    then hsb_pregnancy.OB_WRK_EDD_DT - (40*7) -- We will estimate based on normal pregnancy length
+                  --We don't know either the delivery date or the working delivery date. We got nothing.
+                  else NULL
+          end
+      end ""Date of Conception""
+      ,ser_ob.PROV_ID as ""Linked Obstetrician ID""
+  FROM
+    EPISODE hsb_pregnancy
+    LEFT JOIN EPISODE hsb_delivery on hsb_pregnancy.EPISODE_ID = hsb_delivery.OB_DEL_PREG_EPI_ID
+    LEFT JOIN OB_HSB_DELIVERY hsb_pregnancy_2 on hsb_delivery.EPISODE_ID = hsb_pregnancy_2.SUMMARY_BLOCK_ID --This is mom's delivery record
+    LEFT JOIN OB_HSB_DELIVERY hsb_delivery_2 on hsb_delivery.EPISODE_ID = hsb_delivery_2.SUMMARY_BLOCK_ID -- This is baby's delivery record
+    --In case both hsb_pregnancy_2.OB_DELIVERY_DATE and hsb_delivery_2.OB_DEL_BIRTH_DTTM are null
+    LEFT JOIN PAT_ENC_HSP delivery_admit on hsb_pregnancy_2.DELIVERY_DATE_CSN = delivery_admit.PAT_ENC_CSN_ID
+    LEFT JOIN EPSD_CARE_PROVIDER hsb_pregnancy_lnkd_prov on hsb_pregnancy.EPISODE_ID = hsb_pregnancy_lnkd_prov.SUMMARY_BLOCK_ID
+      and hsb_pregnancy_lnkd_prov.LINE = 1
+      and hsb_pregnancy_lnkd_prov.CARE_ROLE_C = 6 -- Obstetrician  [6]
+    LEFT JOIN CLARITY_SER ser_ob on hsb_pregnancy_lnkd_prov.CARE_PROVIDER_ID = ser_ob.PROV_ID
+    INNER JOIN PATIENT pt on hsb_pregnancy.PAT_LINK_ID  = pt.PAT_ID
+  WHERE
+    1 = 1
+    --and pt.PAT_MRN_ID	= '10063864'	 -------- Sample MRN
+    and hsb_pregnancy.START_DATE >= date '2016-11-01' -- Start of Connected MOM
+    and hsb_pregnancy.SUM_BLK_TYPE_ID = 2 -- PREGNANCY [2]
+      and (hsb_delivery.SUM_BLK_TYPE_ID = 14 or hsb_delivery.SUM_BLK_TYPE_ID is null) -- DELIVERY [14]
+    and hsb_pregnancy.STATUS_C <> 3 -- Deleted [3]
+    --Found an episode with the same start and end date along with another one with same start date for same patient
+    --Apparently user decided there was something amiss with the first episode and resolved it instead of deleteing it
+    and hsb_pregnancy.START_DATE < nvl(hsb_pregnancy.END_DATE,trunc(SYSDATE))
+    --and hsb_pregnancy.PAT_LINK_ID = :EPT
+    --and hsb_pregnancy.EPISODE_ID = :HSB
+  GROUP BY
+      hsb_pregnancy.EPISODE_ID
+      ,hsb_pregnancy.PAT_LINK_ID
+      ,hsb_pregnancy.START_DATE
+      ,hsb_pregnancy.END_DATE
+      ,case 
+          When Hsb_Pregnancy_2.Ob_Delivery_Date Is Not Null Then Hsb_Pregnancy_2.Ob_Delivery_Date
+          when hsb_pregnancy_2.OB_DELIVERY_DATE is null and hsb_delivery_2.OB_DEL_BIRTH_DTTM is not NULL then EPIC_UTIL.EFN_UTC_TO_LOCAL(hsb_delivery_2.OB_DEL_BIRTH_DTTM)
+          when hsb_pregnancy_2.OB_DELIVERY_DATE is null and hsb_delivery_2.OB_DEL_BIRTH_DTTM is null and delivery_admit.HOSP_ADMSN_TIME is not NULL then delivery_admit.HOSP_ADMSN_TIME
+      end
+      --Determine date of conception
+      ,case
+          --Simplify the logic by coalescing hsb_pregnancy_2.OB_DELIVERY_DATE,hsb_delivery_2.OB_DEL_BIRTH_DTTM and delivery_admit.HOSP_ADMSN_TIME
+          -- We know the delivery date 
+          when coalesce(hsb_pregnancy_2.OB_DELIVERY_DATE,EPIC_UTIL.EFN_UTC_TO_LOCAL(hsb_delivery_2.OB_DEL_BIRTH_DTTM),delivery_admit.HOSP_ADMSN_TIME) is not NULL
+              then COALESCE(hsb_pregnancy_2.OB_DELIVERY_DATE,EPIC_UTIL.EFN_UTC_TO_LOCAL(hsb_delivery_2.OB_DEL_BIRTH_DTTM),delivery_admit.HOSP_ADMSN_TIME) - COALESCE(hsb_delivery_2.OB_HX_GEST_AGE,  (40*7))
+          -- We don't know the delivery date
+          when coalesce(hsb_pregnancy_2.OB_DELIVERY_DATE,EPIC_UTIL.EFN_UTC_TO_LOCAL(hsb_delivery_2.OB_DEL_BIRTH_DTTM),delivery_admit.HOSP_ADMSN_TIME) is NULL then
+              case
+                  --We know the working delivery date 
+                  when hsb_pregnancy.OB_WRK_EDD_DT is not NULL 
+                    then hsb_pregnancy.OB_WRK_EDD_DT - (40*7) -- We will estimate based on normal pregnancy length
+                  --We don't know either the delivery date or the working delivery date. We got nothing.
+                  else NULL
+          end
+      end 
+      ,ser_ob.PROV_ID
+  
+)
+--select * from pregnancies;
+--select count(*) from pregnancies; --28 sec/ 76,145 records/65,844 distinct EPT
+
+,Prenatal_Encounters as
+(
+/* ************************************************************************************
+Returns set of Prenatal encounters and associated information occuring within an episodes start and end dates
+************************************************************************************ */
+    SELECT
+       pregnancies.""Pregnancy Episode ID""
+      ,enc.PAT_ENC_CSN_ID
+      ,enc.CONTACT_DATE ""Prenatal Encounter Date""
+      ,enc.ENC_TYPE_C ""Encounter Type""
+      ,ty.NAME ""Encounter Type Name""
+      ,enc.DEPARTMENT_ID as ""Encounter Department ID""
+      ,dep.DEPARTMENT_NAME as ""Encounter Department Name""
+      ,enc.BP_SYSTOLIC ""Systolic""
+      ,enc.BP_DIASTOLIC ""Diastolic""
+      ,enc.WEIGHT ""Weight""
+      ,coverage.PAYOR_ID ""Payor ID""
+      ,epm.PAYOR_NAME ""Payor Name""
+      ,coverage.PLAN_ID ""Plan""
+      ,epm.FINANCIAL_CLASS ""Financial Class""
+      ,fc.FINANCIAL_CLASS_NAME ""Financial Class Name""
+      ,ROW_NUMBER() OVER (PARTITION BY pregnancies.""Pregnancy Episode ID"" ORDER BY enc.CONTACT_DATE ASC) ""Row_Asc""
+      ,ROW_NUMBER() OVER (PARTITION BY pregnancies.""Pregnancy Episode ID"" ORDER BY enc.CONTACT_DATE DESC) ""Row_Desc""
+    FROM
+      pregnancies
+      INNER JOIN PAT_ENC enc on pregnancies.""Mother EPT"" = enc.PAT_ID
+        and enc.CONTACT_DATE >= pregnancies.""Date of Conception""
+        -- and enc.CONTACT_DATE <= pregnancies.""Delivery Date""
+        and enc.CONTACT_DATE <= coalesce(pregnancies.""Delivery Date"",pregnancies.""Pregnancy Episode End"",trunc(SYSDATE) - 1)
+        and enc.ENC_TYPE_C IN (1200,1201) -- Initial Prenatal [1201]; Routine Prenatal [1200]
+        and enc.APPT_STATUS_C = 2 -- Completed
+      LEFT JOIN COVERAGE coverage on enc.COVERAGE_ID = coverage.COVERAGE_ID   
+      LEFT JOIN CLARITY_EPM epm on coverage.PAYOR_ID = epm.PAYOR_ID
+      LEFT JOIN CLARITY_FC fc ON epm.FINANCIAL_CLASS = fc.FINANCIAL_CLASS
+      LEFT JOIN ZC_DISP_ENC_TYPE ty ON enc.ENC_TYPE_C = ty.DISP_ENC_TYPE_C
+      LEFT JOIN CLARITY_DEP dep ON enc.DEPARTMENT_ID = dep.DEPARTMENT_ID
+)
+
+
+,most_seen_ob as
+(
+/* *************************************************************************
+  One row per patient 
+  This was added to handle cases where the patient is not linked with an OB Provider in Epic.
+  It counts the number of prenatal visits with a physician or nurse midwife whose speciality
+  is OB or OB/GYN and selects the provider with the most visits as the ""inferred"" obstetrician
+************************************************************************* */
+  SELECT
+    PAT_ID
+    ,PROV_ID
+    ,""Inferred Obstetrician""
+    ,""Inferred Ob Department""
+    ,""Inferred Ob Location""
+    ,""OB License Type""
+    ,""Pregnancy Episode ID""
+    ,""Linked Obstetrician ID""
+    ,""First Visit""
+    ,""Last Visit""
+    ,""Total Visits"" as ""Visits with this OB""
+  FROM
+  (
+    SELECT
+      PAT_ID
+      ,PROV_ID
+      ,""Inferred Obstetrician""
+      ,""Inferred Ob Department""
+      ,""Inferred Ob Location""
+      ,""OB License Type""
+      ,""Pregnancy Episode ID""
+      ,""Linked Obstetrician ID""
+      ,""First Visit""
+      ,""Last Visit""
+      ,""Total Visits""
+      ,row_number() over (partition by PAT_ID,""Pregnancy Episode ID"" order by ""Total Visits"" desc) as rowno
+    FROM
+    (
+    SELECT DISTINCT
+        visits.PAT_ID
+        ,ser.PROV_ID
+        ,ser.PROV_NAME ""Inferred Obstetrician""
+        ,dep.DEPARTMENT_NAME ""Inferred Ob Department""
+        ,loc.LOC_NAME ""Inferred Ob Location""
+        ,lic.LICENSE_TYPE ""OB License Type""
+        ,visits.""Pregnancy Episode ID"" 
+        ,visits.""Linked Obstetrician ID""
+        ,min(CONTACT_DATE) ""First Visit""
+        ,max(CONTACT_DATE) ""Last Visit""
+        ,count(distinct PAT_ENC_CSN_ID) as ""Total Visits""
+    FROM    
+    (
+        SELECT DISTINCT
+          pregnancies.""Pregnancy Episode ID"" 
+          ,pregnancies.""Linked Obstetrician ID""
+          ,enc.PAT_ID
+          ,enc.PAT_ENC_CSN_ID
+          ,enc.VISIT_PROV_ID
+          ,enc.CONTACT_DATE 
+        FROM
+          pregnancies
+          INNER JOIN PAT_ENC enc on pregnancies.""Mother EPT"" = enc.PAT_ID
+            and enc.CONTACT_DATE >= pregnancies.""Date of Conception""
+            and enc.CONTACT_DATE <= nvl(pregnancies.""Delivery Date"",trunc(SYSDATE) - 1)
+            and enc.ENC_TYPE_C in (1200,1201) -- Routine and Initial Prenatal Encounter Types
+            and enc.APPT_STATUS_C = 2 -- Completed
+          INNER JOIN CLARITY_DEP dep on enc.DEPARTMENT_ID = dep.DEPARTMENT_ID
+          INNER JOIN CLARITY_SER ser on enc.VISIT_PROV_ID = ser.PROV_ID
+        WHERE
+          enc.CONTACT_DATE >= date '2016-11-01' -- Start of Connected MOM
+--and pregnancies.""Pregnancy Episode ID"" = :HSB
+--and (pregnancies.""Mother EPT"" = :EPT or :EPT is NULL)
+    ) visits 
+    INNER JOIN
+        Clarity_Ser Ser On Visits.Visit_Prov_Id = Ser.Prov_Id
+                        and upper(ser.PROV_TYPE) in ('PHYSICIAN','MIDWIFE')
+    INNER JOIN 
+        CLARITY_SER_LICEN2 lic on ser.PROV_ID = lic.PROV_ID
+    INNER JOIN 
+        CLARITY_SER_2 ser2 on ser.PROV_ID = ser2.PROV_ID
+    INNER JOIN
+        CLARITY_DEP dep on ser2.PRIMARY_DEPT_ID = dep.DEPARTMENT_ID
+    INNER JOIN
+        CLARITY_LOC loc on dep.REV_LOC_ID = loc.LOC_ID
+    INNER JOIN
+        CLARITY_EMP emp ON ser.PROV_ID = emp.PROV_ID
+    WHERE
+        dep.SPECIALTY in ('Obstetrics and Gynecology','Obstetrics')
+        --and dep.SERV_AREA_ID = 10
+    GROUP BY
+        visits.PAT_ID
+        ,ser.PROV_ID
+        ,ser.PROV_NAME 
+        ,dep.DEPARTMENT_NAME
+        ,loc.LOC_NAME
+        ,lic.LICENSE_TYPE
+        ,visits.""Pregnancy Episode ID""
+        ,visits.""Linked Obstetrician ID""
+    )
+  )
+  WHERE
+    rowno = 1
+)
+/*
+,alerts as
+(
+  SELECT
+    ALT_ID
+    ,PAT_ID
+    ,PAT_CSN
+    ,BPA_LOCATOR_ID
+  FROM
+    ALERT
+  WHERE
+		GENERAL_ALT_TYPE_C = 1 -- BestPractice Advisory [1]
+		and BPA_LOCATOR_ID = 4021 -- BASE-DIGMED-CONNECTED MOM-ELIGIBLE PATIENT ENROLLMENT BPA [4021]
+  
+)
+*/
+
+--select count(*) from alerts;
+,eligiblity_bpas as 
+	(
+	SELECT
+		/*+MATERIALIZE  PARALLEL(6) */
+		alt.ALT_ID as ""ALT""
+		,alt.PAT_ID as ""EPT""
+		,alt.PAT_CSN as ""CSN""
+		,alt.BPA_LOCATOR_ID as ""Eligibility Alert ID""
+    --,pregnancies.""Pregnancy Episode ID""
+    ,enc.VISIT_PROV_ID
+    ,trunc(alt2.ALT_ACTION_INST) as ""Eligibility Alert Date""
+    ,MAX(CASE when alt2.SPEC_OVR_RSN_C  = '172' then 1 else 0 end) as ""Not Appropriate""
+    ,MAX(CASE when alt2.SPEC_OVR_RSN_C  = '11' then 1 else 0 end) as ""Patient Refused""
+    ,MAX(CASE when alt2.SPEC_OVR_RSN_C  = '148' then 1 else 0 end) as ""No Smartphone""
+    ,MAX(CASE when alt2.SPEC_OVR_RSN_C  = '49' then 1 else 0 end) as ""Ask Again Later""
+        
+    /*  
+        148	No Compatible SmartPhone
+        49	No
+        11	Patient Refused
+        172	Not Appropriate for Patient    
+    */
+	FROM
+		ALERT alt
+    --alerts alt
+    --INNER JOIN pregnancies on alt.PAT_ID = pregnancies.""Mother EPT""
+ 		LEFT JOIN ALT_HISTORY alt2 on alt.ALT_ID = alt2.ALT_ID
+		--LEFT JOIN ZC_ALRT_SP_OVR_RSN reason on alt2.SPEC_OVR_RSN_C = reason.ALRT_SP_OVR_RSN_C
+    INNER JOIN PAT_ENC enc on alt.PAT_CSN = enc.PAT_ENC_CSN_ID
+	WHERE 1 = 1
+		and Alt.General_Alt_Type_C = 1 -- BestPractice Advisory [1]
+		and Alt.Bpa_Locator_Id = 4021 -- BASE-DIGMED-CONNECTED MOM-ELIGIBLE PATIENT ENROLLMENT BPA [4021]
+    --If there is no delivery date, assume the pregnancy episode was over 10 months (304 days) after conseption
+    --and alt2.ALT_ACTION_INST between pregnancies.""Date of Conception"" and NVL(pregnancies.""Delivery Date"",(pregnancies.""Date of Conception"" + 304))
+--and (pregnancies.""Mother EPT"" = :EPT or :EPT is null)
+        and trunc(alt2.ALT_ACTION_INST) = trunc(enc.contact_date)
+	GROUP BY
+		alt.ALT_ID
+		,alt.PAT_ID
+		,alt.PAT_CSN
+		,alt.BPA_LOCATOR_ID
+    --,pregnancies.""Pregnancy Episode ID""
+    ,enc.VISIT_PROV_ID
+    ,trunc(alt2.ALT_ACTION_INST)
+	)
+--select * from eligiblity_bpas;
+,digmed_orders_CSN as
+	(
+	SELECT DISTINCT
+		/* MATERIALIZE */
+		proc.PAT_ENC_CSN_ID as ""CSN""
+		,proc.PROC_ID as ""Enrollment Order ID""
+    ,proc.ORDERING_DATE as ""Order Date""
+		,1 as ""Order Placed""
+	FROM
+		eligiblity_bpas
+		INNER JOIN ORDER_PROC proc on eligiblity_bpas.""CSN"" = proc.PAT_ENC_CSN_ID
+			and proc.PROC_ID = 108795 -- DIGITAL MEDICINE - CONNECTED MOM [MYC23]
+	)
+    
+,digmed_orders_EPS as
+	(
+	SELECT DISTINCT
+		/* MATERIALIZE */
+		--proc.PAT_ENC_CSN_ID as ""CSN""
+        pregnancies.""Pregnancy Episode ID""
+		,min(proc.PROC_ID) as ""Enrollment Order ID""
+    ,min(proc.ORDERING_DATE) as ""Order Date""
+		,min(1) as ""Order Placed""
+	FROM
+		eligiblity_bpas
+		INNER JOIN ORDER_PROC proc on eligiblity_bpas.""CSN"" = proc.PAT_ENC_CSN_ID
+			and proc.PROC_ID = 108795 -- DIGITAL MEDICINE - CONNECTED MOM [MYC23]
+        LEFT JOIN pregnancies ON eligiblity_bpas.EPT = pregnancies.""Mother EPT""
+        AND eligiblity_bpas.""Eligibility Alert Date"" between trunc(pregnancies.""Date of Conception"") and coalesce(pregnancies.""Delivery Date"", pregnancies.""Pregnancy Episode End"",trunc(SYSDATE - 1))
+    Group by pregnancies.""Pregnancy Episode ID""
+	)
+,Digmed_orders as
+(
+  SELECT DISTINCT
+    /* MATERIALIZE */
+    pregnancies.""Pregnancy Episode ID""
+    ,pregnancies.""Pregnancy Episode Start""
+    ,pregnancies.""Pregnancy Episode End""
+    ,pregnancies.""Date of Conception""
+    ,MIN(TRUNC((enc.CONTACT_DATE - pregnancies.""Date of Conception"")/7)) ""Enrollment Ordered at Week""
+    ,enc.PAT_ENC_CSN_ID
+    ,proc.ORDERING_DATE as ""Enrollment Order Date""
+    ,proc.AUTHRZING_PROV_ID as ""Enrollment Order Provider ID""
+    ,enc.CONTACT_DATE as ""Enrollment Encounter Date""
+    ,enc.ENC_TYPE_C as ""Enrollment Encounter Type""
+    ,enc.DEPARTMENT_ID as ""Enrollment Encounter Department""
+  FROM
+    pregnancies
+--    LEFT JOIN connected_mom on connected_mom.""Pregnancy Episode ID"" = pregnancies.""Pregnancy Episode ID""
+--    INNER JOIN PAT_ENC enc on connected_mom.""Patient ID"" = enc.PAT_ID
+    INNER JOIN PAT_ENC enc on pregnancies.""Mother EPT"" = enc.PAT_ID
+    INNER JOIN ORDER_PROC proc on enc.PAT_ENC_CSN_ID = proc.PAT_ENC_CSN_ID
+      and proc.PROC_ID = 108795 -- DIGITAL MEDICINE - CONNECTED MOM [MYC23]
+  WHERE
+--    TRUNC((enc.CONTACT_DATE - pregnancies.""Date of Conception"")/7) between 0 and 30 --We are only interested in orders from this pregnancy
+    TRUNC(enc.CONTACT_DATE) BETWEEN TRUNC(pregnancies.""Date of Conception"") AND COALESCE( TRUNC(pregnancies.""Delivery Date""), TRUNC(pregnancies.""Pregnancy Episode End"")) 
+-- and pregnancies.""Pregnancy Episode ID"" = :HSB
+  GROUP BY
+    pregnancies.""Pregnancy Episode ID""
+    ,pregnancies.""Pregnancy Episode Start""
+    ,pregnancies.""Pregnancy Episode End""
+    ,pregnancies.""Date of Conception""
+    ,enc.PAT_ENC_CSN_ID
+    ,proc.ORDERING_DATE 
+    ,proc.AUTHRZING_PROV_ID
+    ,enc.CONTACT_DATE
+    ,enc.ENC_TYPE_C
+    ,enc.DEPARTMENT_ID
+)
+, selected_provider as 
+(
+  SELECT
+        p.""Mother EPT""
+    ,   p.""Pregnancy Episode ID""
+    ,   p.""Pregnancy Episode Start""
+    ,   p.""Pregnancy Episode End""
+    ,   p.""Date of Conception""
+    ,   p.""Linked Obstetrician ID""
+    ,   linked_prov.""Provider"" as ""Linked Provider""
+    ,   linked_prov.""Provider Primary Department"" as ""Linked Provider Department""
+    ,   linked_prov.""Provider Primary Location"" as ""Linked Provider Location""
+    ,   linked_prov.""Provider Type"" as ""Linked Provider Type""
+    ,   linked_prov.""Service Area"" as ""Linked Service Area""
+    ,   ob.PROV_ID as ""Inferred Prov ID""
+    ,   ob.""Inferred Obstetrician""
+    ,   ob.""Inferred Ob Department""
+    ,   ob.""Inferred Ob Location""  
+    ,   inferred_prov.""Provider Type"" as ""Inferred Provider Type""
+    ,   inferred_prov.""Service Area"" as ""Inferred Service Area""
+    ,   d.""Enrollment Order Provider ID""
+    ,   d.""Enrollment Encounter Department""
+    ,   pe.""Encounter Department Name""
+    ,   enroll_prov.PROV_ID as ""Enrollment Provider ID""
+    ,   enroll_prov.""Provider"" as ""Enrollment Provider""
+    ,   enroll_prov.""Provider Type"" as ""Enrollment Provider Type""
+    ,   enroll_prov.""Service Area"" as ""Enrollment Service Area""
+
+FROM pregnancies p
+    LEFT JOIN most_seen_ob ob ON p.""Pregnancy Episode ID"" = ob.""Pregnancy Episode ID""
+    LEFT JOIN OB_Providers inferred_prov ON ob.PROV_ID = inferred_prov.PROV_ID
+    LEFT JOIN OB_Providers linked_prov ON p.""Linked Obstetrician ID"" = linked_prov.PROV_ID    
+    LEFT JOIN Digmed_orders d ON p.""Pregnancy Episode ID"" = d.""Pregnancy Episode ID""
+    LEFT JOIN OB_Providers enroll_prov ON d.""Enrollment Order Provider ID"" = enroll_prov.PROV_ID  
+    LEFT JOIN Prenatal_Encounters pe ON d.PAT_ENC_CSN_ID = pe.PAT_ENC_CSN_ID
+)
+    
+--select * from digmed_orders; 
+,OB_Visits as
+(
+  SELECT
+    pregnancies.""Pregnancy Episode ID"" 
+    ,enc.PAT_ENC_CSN_ID as ""Pregnancy Prenatal Encounters"" 
+    --,count(distinct enc.PAT_ENC_CSN_ID) as ""OB Visits""
+  FROM
+    pregnancies
+    INNER JOIN PAT_ENC enc on pregnancies.""Mother EPT"" = enc.PAT_ID
+      and enc.CONTACT_DATE between pregnancies.""Date of Conception"" and nvl(pregnancies.""Delivery Date"",trunc(SYSDATE) - 1)
+      --and enc.CONTACT_DATE <= nvl(pregnancies.""Delivery Date"",trunc(SYSDATE) - 1)
+      and enc.ENC_TYPE_C in (1200,1201,101) -- Routine and Initial Prenatal Encounter Types
+      and enc.APPT_STATUS_C = 2 -- Completed
+      --and enc.PAT_ID = 'Z2967225'
+--and (enc.PAT_ID = :EPT or :EPT is NULL)
+  GROUP BY 
+    pregnancies.""Pregnancy Episode ID""   
+    ,enc.PAT_ENC_CSN_ID
+    
+)
+
+, enrollment_reg as
+(
+ SELECT
+      active_events.ept_id as PAT_ID
+      ,active_events.rdt_id
+      ,case when inactive_events.registry_status = 'Inactive' then 'Inactive' else 'Active' end registry_status
+      ,active_events.change_instant as start_date
+      ,MAX(inactive_events.change_instant) KEEP (DENSE_RANK FIRST ORDER BY inactive_events.change_instant ASC) as end_date
+  FROM
+  (
+    SELECT 
+        REGISTRY_DATA_INFO.NETWORKED_ID as ept_id
+        ,REGISTRY_DATA_INFO.RECORD_ID as rdt_id
+        ,ZC_METRIC_STATUS.NAME as registry_status
+        ,EPIC_UTIL.EFN_UTC_TO_LOCAL(REG_DATA_HX_MEMBERSHIP.CHANGE_INSTANT_UTC_DTTM) as change_instant
+    FROM 
+        REG_DATA_HX_MEMBERSHIP
+        INNER JOIN ZC_METRIC_STATUS on REG_DATA_HX_MEMBERSHIP.STATUS_C = ZC_METRIC_STATUS.METRIC_STATUS_C
+        INNER JOIN REGISTRY_DATA_INFO on REG_DATA_HX_MEMBERSHIP.RECORD_ID = REGISTRY_DATA_INFO.RECORD_ID
+    WHERE
+      REG_DATA_HX_MEMBERSHIP.REGISTRY_ID = 100237 
+  ) active_events
+  LEFT JOIN
+  (
+    SELECT 
+        REGISTRY_DATA_INFO.NETWORKED_ID as ept_id
+        ,REGISTRY_DATA_INFO.RECORD_ID as rdt_id
+        ,ZC_METRIC_STATUS.NAME as registry_status
+        ,EPIC_UTIL.EFN_UTC_TO_LOCAL(REG_DATA_HX_MEMBERSHIP.CHANGE_INSTANT_UTC_DTTM) as change_instant
+    FROM 
+        REG_DATA_HX_MEMBERSHIP
+        INNER JOIN ZC_METRIC_STATUS on REG_DATA_HX_MEMBERSHIP.STATUS_C = ZC_METRIC_STATUS.METRIC_STATUS_C
+        INNER JOIN REGISTRY_DATA_INFO on REG_DATA_HX_MEMBERSHIP.RECORD_ID = REGISTRY_DATA_INFO.RECORD_ID
+    WHERE
+      REG_DATA_HX_MEMBERSHIP.REGISTRY_ID = 100237 
+  ) inactive_events on inactive_events.registry_status = 'Inactive'
+      and active_events.ept_id = inactive_events.ept_id
+      and active_events.change_instant <= inactive_events.change_instant
+  WHERE
+      active_events.registry_status = 'Active'
+  GROUP BY
+      active_events.ept_id
+      ,active_events.rdt_id
+      ,case when inactive_events.registry_status = 'Inactive' then 'Inactive' else 'Active' end 
+      ,active_events.change_instant
+)
+
+
+--select * from ob_visits;
+,OB_Patients as
+(
+  /*
+  This CTE returns one line for each patient who had an eligibility BPA fire during a visit with ""their"" OB (Linked or Most Seen).
+  Included is patient MRN, name,visit provider ID, whether the provider responded 
+  to the enrollment offer BPA with any of the four valid responses,
+  a concatenation of all the responses, an ""Order Rate"" and a ""Response Rate"" (these last two have a value of 0 or 1),
+  the number of OB visits where an elgiblity BPA fired, the number of visits where an offer to participate was extended
+  and the number of OB visits during the patient's elgibility period (week 10 to 20).
+  The names were intended to make the Tableau workbook easier to understand (for the developer).
+  A previous version of the dashboard used all the BPA response columns but the current workbook only uses
+  ""Response Rate""
+  */
+  SELECT /* MATERIALIZE PARALLEL(6) */
+    pt.PAT_MRN_ID as ""MRN""
+    ,pt.PAT_ID
+    ,pt.PAT_NAME as ""Patient Name""
+    ,pregnancies.""Pregnancy Episode ID""
+    ,pregnancies.""Pregnancy Episode Start""
+    ,pregnancies.""Pregnancy Episode End""
+    ,pregnancies.""Linked Obstetrician ID""
+    ,most_seen_ob.""Visits with this OB""
+    ,sp.""Enrollment Provider ID""
+    --If the episode has a provider on the enrollment order, use them, else use the linked OB.  Otherwise use the most seen OB.
+    --,case when pregnancies.""Linked Obstetrician ID"" is not NULL then pregnancies.""Linked Obstetrician ID"" else most_seen_ob.PROV_ID end PROV_ID
+    ,coalesce(sp.""Enrollment Provider ID"",pregnancies.""Linked Obstetrician ID"",most_seen_ob.PROV_ID) as PROV_ID
+    --,min(enc.CONTACT_DATE)  as ""1st Appt""
+    ,enc.CONTACT_DATE  as Appt_Date
+    ,pregnancies.""Date of Conception""
+    ,pregnancies.""Delivery Date""
+    ,enc.PAT_ENC_CSN_ID as CSN
+    ,enctype.name as encounter_type
+    ,eligiblity_bpas.""Not Appropriate"" as ""Not Appropriate""
+    ,eligiblity_bpas.""Patient Refused"" as ""Patient Refused""
+    ,eligiblity_bpas.""No Smartphone"" as ""No Smartphone""
+    ,eligiblity_bpas.""Ask Again Later"" as ""Ask Again Later""
+    ,eligiblity_bpas.""Eligibility Alert Date""
+    --,max(eligiblity_bpas.""Alert Response (Last)"") as ""Alert Response (Last)""
+    --,max(eligiblity_bpas.""Alert Response (All)"") as ""Alert Response (All)""
+    ,NVL(Digmed_Orders_CSN.""Order Placed"", 0) as ""Order Placed CSN""
+    ,NVL(Digmed_Orders_EPS.""Order Placed"", 0) as ""Order Placed Episode""
+    /*,max( CASE
+            when digmed_orders.""Order Placed"" = 1 then 1
+            when ""Not Appropriate"" = 1 then 1
+            when ""Patient Refused"" = 1 then 1
+            when ""No Smartphone"" = 1 then 1
+            else 0 
+          end
+        )  as ""Responses""
+    */
+    , enc.PAT_ENC_CSN_ID ""Visits where BPA fired"" 
+    ,CASE
+            when Digmed_Orders_CSN.""Order Placed"" = 1 
+              or ""Not Appropriate"" = 1 
+              or ""Patient Refused"" = 1 
+              or ""No Smartphone"" = 1 then 1
+            else 0 
+          end
+         ""Visits where offer was made"" 
+    ,case 
+            when TRUNC((enc.CONTACT_DATE - pregnancies.""Date of Conception"")/7) between 10 and 20
+            then 1 
+            else 0 
+         end 
+         ""Visits during eligibility""
+    ,en_reg.registry_status
+    ,en_reg.start_date
+    ,en_reg.end_date
+  FROM
+    eligiblity_bpas
+    --I'm assuming the BPA won't fire if the patient is not pregnant
+    --INNER JOIN pregnancies on eligiblity_bpas.""Pregnancy Episode ID"" = pregnancies.""Pregnancy Episode ID""
+    INNER JOIN pregnancies on eligiblity_bpas.EPT = pregnancies.""Mother EPT""
+    INNER JOIN programs on eligiblity_bpas.""Eligibility Alert ID"" = programs.""Eligibility Alert ID""
+    INNER JOIN PAT_ENC enc on eligiblity_bpas.""CSN"" = enc.PAT_ENC_CSN_ID
+    INNER  JOIN ZC_DISP_ENC_TYPE       enctype   ON enc.ENC_TYPE_C            = enctype.DISP_ENC_TYPE_C 
+    INNER JOIN PATIENT pt on enc.PAT_ID = pt.PAT_ID
+    INNER JOIN CLARITY_DEP dep on enc.DEPARTMENT_ID = dep.DEPARTMENT_ID
+    INNER JOIN CLARITY_SER ser on enc.VISIT_PROV_ID = ser.PROV_ID
+    --Only include patients who are seeing an OB?
+    LEFT JOIN most_seen_ob on pregnancies.""Pregnancy Episode ID"" = most_seen_ob.""Pregnancy Episode ID"" 
+    --INNER JOIN CLARITY_EMP emp on most_seen_ob.PROV_ID = emp.PROV_ID
+    INNER JOIN ZC_DISP_ENC_TYPE enc_type on enc.ENC_TYPE_C = enc_type.DISP_ENC_TYPE_C
+    Left Join Digmed_Orders_CSN On Eligiblity_Bpas.""CSN"" = Digmed_Orders_CSN.""CSN""
+    Left Join Digmed_Orders_EPS On pregnancies.""Pregnancy Episode ID"" = Digmed_Orders_EPS.""Pregnancy Episode ID""
+    --LEFT JOIN X_EMP_DIGMED_ENROLL_PROG x_emp on emp.USER_ID = x_emp.USER_NUMBER_ID and x_emp.DM_PROGRAMS_C = 3 --Redundant with ob_providers CTE
+    Left Join enrollment_reg en_reg on en_reg.PAT_ID = eligiblity_bpas.EPT 
+        and (trunc(en_reg.START_DATE) between trunc(pregnancies.""Pregnancy Episode Start"")
+        and  nvl(pregnancies.""Pregnancy Episode End"",trunc(SYSDATE - 1)))
+    Left Join selected_provider sp ON pregnancies.""Pregnancy Episode ID"" = sp.""Pregnancy Episode ID""
+
+    WHERE 1 = 1
+    and ser.STAFF_RESOURCE_C = 1 -- Person [1]
+    and enc.ENC_TYPE_C in (1200,1201,101) 
+    --We are only interested in the the BPAs that happened when they were seeing ""their"" (linked or most seen) OB
+    
+    --BRODIE UPDATE
+    --and eligiblity_bpas.VISIT_PROV_ID = coalesce(pregnancies.""Linked Obstetrician ID"",most_seen_ob.PROV_ID)
+    
+    --That happened during this pregnancy episode
+    and eligiblity_bpas.""Eligibility Alert Date"" between trunc(pregnancies.""Date of Conception"") and coalesce(pregnancies.""Delivery Date"", pregnancies.""Pregnancy Episode End"",trunc(SYSDATE - 1))
+    --and ser.STAFF_RESOURCE_C = 1 -- Person [1]
+    --    and enc.CONTACT_DATE >= trunc(SYSDATE) - 365  --This query won't complete for longer periods
+    --and (pregnancies.""Mother EPT"" = :EPT or :EPT is null)
+    --and pt.PAT_MRN_ID = :MRN
+  /*
+  GROUP BY
+    pt.PAT_MRN_ID
+    ,pt.PAT_ID
+    ,pt.PAT_NAME
+    ,pregnancies.""Pregnancy Episode ID""
+    ,pregnancies.""Pregnancy Episode Start""
+    ,pregnancies.""Pregnancy Episode End""
+    ,pregnancies.""Linked Obstetrician ID""
+    ,most_seen_ob.""Visits with this OB""
+    ,coalesce(pregnancies.""Linked Obstetrician ID"",most_seen_ob.PROV_ID)
+    ,pregnancies.""Date of Conception""
+    ,pregnancies.""Delivery Date""
+    ,enc.CONTACT_DATE
+    ,eligiblity_bpas.""CSN""
+    ,enctype.name
+    */
+)
+
+--select * from ob_patients;
+--select count(*) from ob_patients; --12,080 distinct MRN
+SELECT distinct 
+  OB_Providers.""Provider""
+  ,OB_Providers.""Provider Type""
+  --,OB_Providers.PROV_ID
+  ,OB_Providers.""Provider Primary Department""
+  ,OB_Providers.""Provider Cost Center""
+  ,OB_Providers.""Provider Primary Location""
+  ,OB_Providers.""Participating""
+  --,case when most_seen_ob.""Linked Obstetrician ID"" is NULL then 'Y' else 'N' end ""Patient's Inferred OB""
+  ,case when OB_Patients.PROV_ID <> OB_Patients.""Enrollment Provider ID"" 
+      THEN CASE WHEN OB_Patients.""Linked Obstetrician ID"" <> OB_Patients.PROV_ID then 'Y' else 'N' end END ""Patient's Inferred OB""
+  ,OB_Patients.PAT_ID
+  ,OB_Patients.MRN
+  ,OB_Patients.CSN
+  ,OB_Patients.""Eligibility Alert Date""
+  ,OB_Patients.encounter_type
+  ,OB_Patients.""Patient Name""
+  ,OB_Patients.PROV_ID
+  ,OB_Patients.""Linked Obstetrician ID""
+  ,OB_Patients.""Enrollment Provider ID""
+  --,OB_Patients.""1st Appt""
+  ,OB_Patients.Appt_Date
+  ,OB_Patients.""Not Appropriate""
+  ,OB_Patients.""Patient Refused""
+  ,OB_Patients.""No Smartphone""
+  ,OB_Patients.""Ask Again Later""
+  --,OB_Patients.""Alert Response (Last)""
+  --,OB_Patients.""Alert Response (All)"" 
+  ,OB_Patients.""Order Placed CSN""
+  ,OB_Patients.""Order Placed Episode""
+  --,OB_Patients.""Responses""
+  ,OB_patients.""Visits where BPA fired""
+  ,OB_patients.""Visits where offer was made""
+  ,OB_patients.""Visits during eligibility""
+  ,OB_patients.""Pregnancy Episode ID""
+  ,OB_patients.""Pregnancy Episode Start""
+  ,OB_patients.""Pregnancy Episode End""
+  ,OB_patients.start_date as registry_enroll_date
+  ,OB_patients.end_date as registry_unenroll_date
+  ,OB_patients.""Visits with this OB""
+  --,OB_Visits.""OB Visits""
+  ,trunc(OB_patients.""Date of Conception"") as ""Date of Conception""
+  ,trunc(OB_patients.""Delivery Date"") as ""Delivery Date""
+  ,OB_patients.registry_status
+FROM
+    OB_Patients
+  LEFT JOIN OB_Providers on OB_Providers.PROV_ID = OB_Patients.PROV_ID
+  --LEFT JOIN most_seen_ob on OB_Patients.""Pregnancy Episode ID"" = most_seen_ob.""Pregnancy Episode ID""
+  --Full Outer JOIN OB_Visits on OB_Patients.""Pregnancy Episode ID"" = OB_Visits.""Pregnancy Episode ID""
+  --and OB_Patients.CSN  =  OB_Visits.""Pregnancy Prenatal Encounters""",1c6ba5ab-0f1d-4f73-a500-d936bb60184e,Connected MOM - Offer Rates by Provider,Connected MOM PROD,workbook
+0114ee8c-4c5a-0919-e6a1-d596a3ea8a63,Custom SQL Query,Select * from PRIMARY_PANEL_CONTINUITY_PROV,0cab9f1f-c637-4762-a580-472447af7eaa,Primary Care Panel Continuity Teams Breakdown,Primary Care Panel DEV,workbook
+01237a3e-4354-e2ad-bb1b-1d9b7efc393a,Template Release Info,"WITH PROV_AUDIT as (
+SELECT  
+
+DEPARTMENT_ID, 
+AUDIT_DATETIME, 
+PROV_ID, 
+TMPLT_AUDIT_ACT_C, 
+USER_ID, 
+AUDIT_DETAILS,
+row_number () over (partition by department_id, prov_id order by AUDIT_DATETIME desc) as test_rank
+
+
+
+FROM 
+TEMPLATE_AUDIT_TRL 
+where TMPLT_AUDIT_ACT_C = 5
+--and prov_id = '42905'
+)
+
+
+
+,Release as (
+SELECT  
+tat.prov_id
+,tat.department_Id
+,tat.user_id
+,tat.AUDIT_DATETIME 
+,tat.AUDIT_DETAILS
+,emp.name as Last_Release_by
+,ser2.REL_DT_OFST as SER_OffSet
+,ser.active_status
+,prlst.NAME as Prov_Offset_Time_Frame
+,dep3.VAL_DT_OFST as Dept_OffSet
+,drlst.NAME as Dept_OffSet_Time_Frame
+
+,prslt.DEP_REL_OFF as SER_DEPT_OFFSet
+,prlstz.NAME as Prov_Dep_Offset_Time_Frame 
+,prslt.DEP_REL_DEP
+
+--,pdrls.DEP_REL_DEP
+--,pdrls.DEP_REL_OFF
+--,pdrls.DEP_REL_UNITS_C
+
+
+
+
+FROM 
+CLARITY_SER_2 ser2
+INNER JOIN PROV_AUDIT tat on ser2.prov_id = tat.prov_id and tat.test_rank = 1
+INNER JOIN CLARITY_SER ser on ser2.prov_id = ser.prov_id and ser.active_status_c = 1
+INNER JOIN CLARITY_EMP emp on tat.user_id = emp.user_id
+LEFT JOIN ZC_REL_DT_OFST_TF prlst on ser2.REL_DT_OFST_TF_C = prlst.REL_DT_OFST_TF_C
+--LEFT JOIN PROV_DEP_REL_DATE pdrls on ser2.prov_id = pdrls.prov_id
+LEFT JOIN CLARITY_DEP_3 dep3 on tat.department_id = dep3.department_ID
+LEFT JOIN ZC_REL_DT_OFST_TF drlst on dep3.REL_DT_OFST_TF_C = drlst.REL_DT_OFST_TF_C 
+LEFT JOIN CLARITY_SER_DEPT serd on ser2.prov_id = serd.prov_id and dep3.department_ID = serd.department_id and serd.INACT_CAD_DEPT_YN = 'N'
+LEFT JOIN PROV_DEP_REL_DATE prslt on serd.prov_id = prslt.prov_id and dep3.department_ID = prslt.dep_rel_dep
+LEFT JOIN ZC_REL_DT_OFST_TF prlstz on prslt.DEP_REL_UNITS_C = prlstz.REL_DT_OFST_TF_C 
+--WHERE ser2.PROV_ID = '640'
+)
+
+
+SELECT rls.*
+,coalesce (rls.SER_DEPT_OFFSet, rls.SER_OffSet, rls.Dept_OffSet) as Main_Temp_Offset
+,coalesce (rls.Prov_Dep_Offset_Time_Frame ,rls.Prov_Offset_Time_Frame, rls.Dept_OffSet_Time_Frame) as Primary_Temp_Offset_Time_Frame
+
+FROM RELEASE rls
+
+ORDER BY PROV_ID
+
+--SELECT * FROM 
+--PROV_DEP_REL_DATE",d98d0d2a-9163-49a9-a508-c0278e8d7ee4,Schedule Management Query - Update,Access to Care Internal Use Only DEV,datasource
