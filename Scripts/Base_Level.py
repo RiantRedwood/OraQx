@@ -3,7 +3,7 @@ from collections import Counter
 import pandas as pd
 import logging
 
-# Oracle SQL Parsing Approach
+# Oracle SQL Parsing Basic Approach - Removes Comments for Uniformity
 
 COMMENT_REGEX = re.compile(r"(?s)/\*.*?\*/|--.*?\n")
 CTE_REGEX = re.compile(r"WITH\s+([\w]+)\s+AS\s*\((.*?)\)", re.I | re.DOTALL)
