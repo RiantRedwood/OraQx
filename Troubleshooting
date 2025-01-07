@@ -1,0 +1,110 @@
+### **Troubleshooting Document: Common Errors by Likely Culprits**
+
+#### **Category: Python-Based Static Analysis and Metadata Extraction**
+**Likely Culprits:**
+1. **Library Limitations**
+   - **Error**: Unsupported SQL syntax when using `sqlparse`, `SQLGlot`, or `sql-metadata`.
+   - **Cause**: Oracle-specific constructs like `CONNECT BY`, `PRIOR`, or inline hints (`/*+ HINT */`) may not be parsed correctly.
+   - **Solution**: Preprocess queries to normalize Oracle-specific syntax before parsing.
+
+2. **Regex Misinterpretation**
+   - **Error**: Misidentification of table or column names due to overly broad or restrictive regex patterns.
+   - **Cause**: Queries with unconventional spacing, comments, or subqueries.
+   - **Solution**: Test regex patterns against a diverse sample of queries.
+
+3. **Memory Limitations**
+   - **Error**: Out-of-memory issues during analysis of large datasets.
+   - **Cause**: Processing thousands of queries simultaneously.
+   - **Solution**: Use batch processing or integrate `PySpark` for distributed computation.
+
+---
+
+#### **Category: LLM-Augmented Static Analysis**
+**Likely Culprits:**
+1. **Preprocessing Inconsistencies**
+   - **Error**: Tokenization failure or irrelevant LLM output.
+   - **Cause**: Input queries have inconsistent formatting or include irrelevant metadata.
+   - **Solution**: Standardize input using `SQLFluff` or `sqlformat`.
+
+2. **Context Window Overload**
+   - **Error**: Truncated analysis due to exceeding token limits.
+   - **Cause**: Feeding large query sets or verbose documentation to the LLM.
+   - **Solution**: Break input into smaller chunks or use an LLM with a larger context window (e.g., Claude or GPT-4 Turbo).
+
+3. **Semantic Misunderstandings**
+   - **Error**: LLM incorrectly identifies critical tables or columns.
+   - **Cause**: Ambiguity in query syntax or lack of domain-specific context.
+   - **Solution**: Provide additional documentation (e.g., Epic Clarity schema) for improved contextual accuracy.
+
+---
+
+#### **Category: Database-Assisted Query Analysis**
+**Likely Culprits:**
+1. **Insufficient Permissions**
+   - **Error**: Unable to execute queries or access execution plans.
+   - **Cause**: Lack of appropriate privileges on the Oracle database.
+   - **Solution**: Verify and request necessary permissions.
+
+2. **Incorrect Query Logging Setup**
+   - **Error**: Missing or incomplete query logs.
+   - **Cause**: Query logging not enabled or configured improperly.
+   - **Solution**: Work with DBAs to enable logging and validate configuration.
+
+3. **Resource Contention**
+   - **Error**: Performance degradation on the Oracle database.
+   - **Cause**: Heavy profiling or analytics queries during production hours.
+   - **Solution**: Run analyses on a development or staging environment.
+
+---
+
+#### **Category: Snowflake Migration Assessment Workflow**
+**Likely Culprits:**
+1. **SQL Dialect Incompatibilities**
+   - **Error**: Queries fail after migration due to syntax differences between Oracle and Snowflake.
+   - **Cause**: Oracle-specific constructs like `ROWNUM` or `CONNECT BY` not supported in Snowflake.
+   - **Solution**: Use tools like SnowConvert or manually refactor queries for compatibility.
+
+2. **Data Type Mismatches**
+   - **Error**: Errors during data loading due to incompatible data types.
+   - **Cause**: Differences between Oracle and Snowflake data type systems.
+   - **Solution**: Map Oracle types to equivalent Snowflake types (e.g., `NUMBER` to `FLOAT`).
+
+3. **Query Performance Issues**
+   - **Error**: Poor query performance in Snowflake after migration.
+   - **Cause**: Lack of optimization for Snowflake's architecture (e.g., clustering, partitioning).
+   - **Solution**: Analyze Query History and refine query design.
+
+---
+
+#### **Category: Azure-Centric Data Analysis Workflow**
+**Likely Culprits:**
+1. **Service Configuration Errors**
+   - **Error**: Pipeline failures in Azure Data Factory or Synapse Analytics.
+   - **Cause**: Incorrect connection strings or authentication issues.
+   - **Solution**: Validate service configurations and connection settings.
+
+2. **File Format Mismatches**
+   - **Error**: Ingested query files fail to process correctly.
+   - **Cause**: Incompatible file formats or malformed query text.
+   - **Solution**: Standardize query file formatting before ingestion.
+
+3. **Overhead from Intermediate Steps**
+   - **Error**: Increased latency or cost during ETL processes.
+   - **Cause**: Excessive preprocessing or unnecessary data movements.
+   - **Solution**: Simplify pipelines by minimizing intermediate transformations.
+
+---
+
+#### **Category: Epic and Tableau Integrated Analysis**
+**Likely Culprits:**
+1. **Epic Schema Complexity**
+   - **Error**: Misinterpretation of Clarity schema relationships.
+   - **Cause**: Incomplete understanding of the Epic Clarity data model.
+   - **Solution**: Consult the Clarity Data Dictionary and collaborate with Epic administrators.
+
+2. **Tableau Metadata Ambiguities**
+   - **Error**: Difficulty identifying critical tables from Tableau workbooks.
+   - **Cause**: Complex or poorly documented workbook structures.
+   - **Solution**: Use Tableau's metadata APIs to extract and analyze data source information.
+
+---
