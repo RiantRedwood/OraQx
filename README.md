@@ -1,4 +1,4 @@
-## ** OraQx **
+## **OraQx**
 
 OraQx is the resultant repo of possible solutions and current-state script versions designed to facilitate the identification and analysis of critical tables and columns by analyzing SQL queries w/o accessing the DB. It offers a variety of workflows and tools, ranging from static analysis to dynamic database-assisted methods, to cater to different technical requirements and environments.
 
