@@ -1,0 +1,26 @@
+-- Purpose: Prioritizes relationships based on frequency of usage in joins, capturing both enforced and implicit relationships.
+--
+SELECT
+    fk.OWNER AS CHILD_OWNER,
+    fk.TABLE_NAME AS CHILD_TABLE,
+    fk.COLUMN_NAME AS CHILD_COLUMN,
+    pk.OWNER AS PARENT_OWNER,
+    pk.TABLE_NAME AS PARENT_TABLE,
+    pk.COLUMN_NAME AS PARENT_COLUMN,
+    COUNT(sql.SQL_ID) AS JOIN_FREQUENCY,
+    RANK() OVER (ORDER BY COUNT(sql.SQL_ID) DESC) AS RELATIONSHIP_RANK
+FROM
+    DBA_CONS_COLUMNS fk
+JOIN
+    DBA_CONSTRAINTS c ON fk.CONSTRAINT_NAME = c.CONSTRAINT_NAME
+JOIN
+    DBA_CONS_COLUMNS pk ON c.R_CONSTRAINT_NAME = pk.CONSTRAINT_NAME
+LEFT JOIN
+    DBA_HIST_SQLTEXT sql ON sql.SQL_TEXT LIKE '%' || fk.TABLE_NAME || '%' AND sql.SQL_TEXT LIKE '%' || pk.TABLE_NAME || '%'
+WHERE
+    c.CONSTRAINT_TYPE = 'R' -- Foreign Key relationships
+    AND fk.OWNER NOT IN ('SYS', 'SYSTEM')
+GROUP BY
+    fk.OWNER, fk.TABLE_NAME, fk.COLUMN_NAME, pk.OWNER, pk.TABLE_NAME, pk.COLUMN_NAME
+ORDER BY
+    RELATIONSHIP_RANK ASC;
