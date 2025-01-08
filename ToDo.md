@@ -13,7 +13,7 @@
 
 ## **Secondary**
 
-### Develop extensive Unit Tests of query outliers:
+### Develop extensive Unit Tests of query outliers
 
     [ ] Alternative query language / design (PostgreSQL, NoSQL, MSSQL, etc)
     [ ] Poorly formatted / extra characters / missing characters / whitespaces
@@ -24,13 +24,13 @@
 
 ## **Supplementary**
 
-### Engage LLMs for in-depth discussion:
+### Engage LLMs for in-depth discussion
 
     [ ] 'What are the right questions to ask?'
     [ ] 'What can I use as proof the script is producing viable results?'
     [ ] 'Is there a known sample for such testing?'
 
-### Search Public Repos for:
+### Search Public Repos for
 
     [ ] 'Oracle Migration'
     [ ] 'Epic SQL'
