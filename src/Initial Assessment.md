@@ -1,8 +1,4 @@
-**Refined Conversation Summary:**
-
----
-
-### Initial Request
+### Initial Request and Subsequent Analysis
 
 **Brodie Dore** initiated a request to **Michael** for an analysis of SQL queries on the Tableau server to assist with data migration, governance, and user profiling. The primary goal was to identify the most frequently used tables/CTEs across various Tableau project folders, aiming to optimize the D&A Snowflake build and enhance data governance.
 

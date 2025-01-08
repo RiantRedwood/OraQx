@@ -1,0 +1,31 @@
+Hey Michael,
+
+I wanted to write up this request we discussed regarding the analysis of custom SQL on our Tableau server. Erin D. and I spoke on Monday, and she recommended reaching out to you about potentially leveraging AI to assist with aspects of this analysis.
+
+Below are the key questions I’d like to explore, with the primary goal of identifying the most frequently used tables or CTEs associated with subject areas within Tableau project folders. The insights from this analysis could support our D&A Snowflake build, data governance considerations, and user profiling efforts.
+
+Questions for Analysis
+This is my first attempt at the analysis but refinement is needed for accuracy:
+Summary Data.
+
+For each custom SQL query, could you help determine:
+	·         Columns used in the final SELECT statement
+	·         All referenced columns, mapped to database tables or CTEs
+	·         All physical database tables referenced in the query
+	·         Total number of CTEs within the query
+	·         Total number of DB links and their names
+	·         Whether asterisks (SELECT *) were used
+	·         The number of parallel hints (for potential performance tuning)
+	·         The number of materialized hints (for potential performance tuning)
+	·         Lines of code to assess query complexity
+
+Here is the GitLab repo I used to pull the code and generate the Excel workbook:
+GitLab Repository.
+
+Additional Considerations
+I can supplement this analysis with:
+	·         User activity based on popular workbooks (not straightforward but possible)
+	·         Query execution times to identify the longest-running queries
+
+User Personas
+I also believe there’s potential value in creating user personas based on Tableau usage. This would involve a separate analysis, looking at job title, position, department, and user activity to develop more tailored insights.

@@ -1,19 +1,20 @@
-### Initial Request
+Below are the key questions I’d like to explore, with the primary goal of identifying the most frequently used tables or CTEs associated with subject areas within Tableau project folders. The insights from this analysis could support our D&A Snowflake build, data governance considerations, and user profiling efforts.
 
-**Brodie Dore** initiated a request to **Michael** for an analysis of SQL queries on the Tableau server to assist with data migration, governance, and user profiling. The primary goal was to identify the most frequently used tables/CTEs across various Tableau project folders, aiming to optimize the D&A Snowflake build and enhance data governance.
+For each custom SQL query, could you help determine:
+	·         Columns used in the final SELECT statement
+	·         All referenced columns, mapped to database tables or CTEs
+	·         All physical database tables referenced in the query
+	·         Total number of CTEs within the query
+	·         Total number of DB links and their names
+	·         Whether asterisks (SELECT *) were used
+	·         The number of parallel hints (for potential performance tuning)
+	·         The number of materialized hints (for potential performance tuning)
+	·         Lines of code to assess query complexity
 
-Brodie’s **specific analysis requests** included:
-1. **Columns** in final `SELECT` statements.
-2. **Referenced columns** linked to tables or CTEs.
-3. **Database tables** explicitly used.
-4. **CTEs** count in each query.
-5. **Database links** used, including their names.
-6. Presence of `SELECT *` (asterisk usage).
-7. Count of **parallel hints** for tuning.
-8. Count of **materialized hints** for tuning.
-9. Query **lines of code** for complexity evaluation.
+Additional Considerations
+I can supplement this analysis with:
+	·         User activity based on popular workbooks (not straightforward but possible)
+	·         Query execution times to identify the longest-running queries
 
-Brodie noted additional analysis possibilities:
-- **User activity** for popular workbooks.
-- **Execution times** to identify long-running queries.
-- Suggested **user personas** based on Tableau usage.
+User Personas
+I also believe there’s potential value in creating user personas based on Tableau usage. This would involve a separate analysis, looking at job title, position, department, and user activity to develop more tailored insights.
